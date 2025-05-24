@@ -1,0 +1,347 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{72AA9A87-9800-4026-AF01-D8FD6E64856E}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <StartupObject>Numistmatics__Final__working_.My.MyApplication</StartupObject>
+    <RootNamespace>Numistmatics__Final__working_</RootNamespace>
+    <AssemblyName>Numistmatics</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <MyType>WindowsForms</MyType>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DocumentationFile>Numistmatics.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DocumentationFile>Numistmatics.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionExplicit>On</OptionExplicit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionCompare>Binary</OptionCompare>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionStrict>Off</OptionStrict>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionInfer>On</OptionInfer>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>icons8_notes_and_coins_euro_100_rCL_icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>My Project\app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Data" />
+    <Import Include="System.Drawing" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Windows.Forms" />
+    <Import Include="System.Linq" />
+    <Import Include="System.Xml.Linq" />
+    <Import Include="System.Threading.Tasks" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ApplicationEvents.vb" />
+    <Compile Include="CoinsDataSet.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CoinsDataSet.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="Currency_Short_NamesDataSet.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Currency_Short_NamesDataSet.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\Database Forms\Extended Screens\frmECoins.Designer.vb">
+      <DependentUpon>frmECoins.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\Database Forms\Extended Screens\frmECoins.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\Database Forms\Extended Screens\frmENotes.Designer.vb">
+      <DependentUpon>frmENotes.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\Database Forms\Extended Screens\frmENotes.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\frmAboutMe.Designer.vb">
+      <DependentUpon>frmAboutMe.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\frmAboutMe.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\frmBackupRestore.Designer.vb">
+      <DependentUpon>frmBackupRestore.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\frmBackupRestore.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\Setting Forms\frmChangeKey.Designer.vb">
+      <DependentUpon>frmChangeKey.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\Setting Forms\frmChangeKey.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\Main Forms\frmCoins.Designer.vb">
+      <DependentUpon>frmCoins.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\Main Forms\frmCoins.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\Database Forms\frmDatabase.Designer.vb">
+      <DependentUpon>frmDatabase.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\Database Forms\frmDatabase.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\frmGallery.Designer.vb">
+      <DependentUpon>frmGallery.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\frmGallery.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\frmInfoCenter.Designer.vb">
+      <DependentUpon>frmInfoCenter.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\frmInfoCenter.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmLoading.Designer.vb">
+      <DependentUpon>frmLoading.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmLoading.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmLogin.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmLogin.Designer.vb">
+      <DependentUpon>frmLogin.vb</DependentUpon>
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\Main Forms\frmNotes.Designer.vb">
+      <DependentUpon>frmNotes.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\Main Forms\frmNotes.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmDashboard.Designer.vb">
+      <DependentUpon>frmDashboard.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmDashboard.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\Setting Forms\frmSetting.Designer.vb">
+      <DependentUpon>frmSetting.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dashboard Forms\Setting Forms\frmSetting.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="My Project\Application.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Application.myapp</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Settings.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="NotesDataSet.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>NotesDataSet.xsd</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Forms\Dashboard Forms\Database Forms\Extended Screens\frmECoins.resx">
+      <DependentUpon>frmECoins.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dashboard Forms\Database Forms\Extended Screens\frmENotes.resx">
+      <DependentUpon>frmENotes.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dashboard Forms\frmAboutMe.resx">
+      <DependentUpon>frmAboutMe.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dashboard Forms\frmBackupRestore.resx">
+      <DependentUpon>frmBackupRestore.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dashboard Forms\Setting Forms\frmChangeKey.resx">
+      <DependentUpon>frmChangeKey.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dashboard Forms\Main Forms\frmCoins.resx">
+      <DependentUpon>frmCoins.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dashboard Forms\Database Forms\frmDatabase.resx">
+      <DependentUpon>frmDatabase.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dashboard Forms\frmGallery.resx">
+      <DependentUpon>frmGallery.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dashboard Forms\frmInfoCenter.resx">
+      <DependentUpon>frmInfoCenter.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmLoading.resx">
+      <DependentUpon>frmLoading.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmLogin.resx">
+      <DependentUpon>frmLogin.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dashboard Forms\Main Forms\frmNotes.resx">
+      <DependentUpon>frmNotes.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmDashboard.resx">
+      <DependentUpon>frmDashboard.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dashboard Forms\Setting Forms\frmSetting.resx">
+      <DependentUpon>frmSetting.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="My Project\Resources.resx">
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CoinsDataSet.xsc">
+      <DependentUpon>CoinsDataSet.xsd</DependentUpon>
+    </None>
+    <None Include="CoinsDataSet.xsd">
+      <Generator>MSDataSetGenerator</Generator>
+      <LastGenOutput>CoinsDataSet.Designer.vb</LastGenOutput>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="CoinsDataSet.xss">
+      <DependentUpon>CoinsDataSet.xsd</DependentUpon>
+    </None>
+    <None Include="Currency_Short_NamesDataSet.xsc">
+      <DependentUpon>Currency_Short_NamesDataSet.xsd</DependentUpon>
+    </None>
+    <None Include="Currency_Short_NamesDataSet.xsd">
+      <Generator>MSDataSetGenerator</Generator>
+      <LastGenOutput>Currency_Short_NamesDataSet.Designer.vb</LastGenOutput>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Currency_Short_NamesDataSet.xss">
+      <DependentUpon>Currency_Short_NamesDataSet.xsd</DependentUpon>
+    </None>
+    <None Include="My Project\app.manifest" />
+    <None Include="My Project\Application.myapp">
+      <Generator>MyApplicationCodeGenerator</Generator>
+      <LastGenOutput>Application.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <CustomToolNamespace>My</CustomToolNamespace>
+      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="App.config" />
+    <None Include="NotesDataSet.xsc">
+      <DependentUpon>NotesDataSet.xsd</DependentUpon>
+    </None>
+    <None Include="NotesDataSet.xsd">
+      <Generator>MSDataSetGenerator</Generator>
+      <LastGenOutput>NotesDataSet.Designer.vb</LastGenOutput>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="NotesDataSet.xss">
+      <DependentUpon>NotesDataSet.xsd</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Coins.accdb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Currency_Short_Names.accdb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons8_notes_and_coins_euro_100_rCL_icon.ico" />
+    <Content Include="Notes.accdb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Include="Resources\icons8-close-window-20.png" />
+    <None Include="Resources\icons8-currency-exchange-50.png" />
+    <None Include="Resources\icons8-currency-exchange-50 %281%29.png" />
+    <None Include="Resources\icons8-clear-symbol-50.png" />
+    <None Include="Resources\icons8-more-50.png" />
+    <None Include="Resources\icons8-back-50.png" />
+    <None Include="Resources\icons8-no-entry-20.png" />
+    <None Include="Resources\imageonline-co-overlayed-image %287%29.png" />
+    <None Include="Resources\imageonline-co-overlayed-image_6_1_45x451.png" />
+    <None Include="Resources\imageonline-co-overlayed-image_6_1_45x45.png" />
+    <None Include="Resources\icons8-scanner-80.png" />
+    <None Include="Resources\icons8-refresh-50.png" />
+    <None Include="Resources\icons8-refresh-50 %281%29.png" />
+    <None Include="Resources\imageonline-co-overlayed-image %285%29.png" />
+    <None Include="Resources\imageonline-co-overlayed-image %286%29.png" />
+    <None Include="Resources\icons8-paper-money-96.png" />
+    <None Include="Resources\imageonline-co-overlayed-image %284%29.png" />
+    <None Include="Resources\imageonline-co-overlayed-image %282%29.png" />
+    <None Include="Resources\icons8-logout-rounded-left-80.png" />
+    <None Include="Resources\icons8-login-rounded-80.png" />
+    <None Include="Resources\imageonline-co-overlayed-image %281%29.png" />
+    <None Include="Resources\icons8-gear-100 %281%29.png" />
+    <None Include="Resources\icons8-login-50.png" />
+    <None Include="Resources\icons8-sign-out-50.png" />
+    <None Include="Resources\ClosedEye.png" />
+    <None Include="Resources\OpenEye.png" />
+    <None Include="Resources\icons8-image-gallery-96_80x80.png" />
+    <None Include="Resources\icons8-save-80.png" />
+    <None Include="Resources\icons8-database-96 %281%29.png" />
+    <None Include="Resources\icons8-paper-money-200_100x100.png" />
+    <None Include="Resources\icons8-coins-100.png" />
+    <None Include="Resources\icons8-gear-100.png" />
+    <None Include="Resources\icons8-contact-info-100.png" />
+    <None Include="Resources\icons8-information-100 %282%29 %281%29.png" />
+    <None Include="Resources\icons8-no-entry-96.png" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
+</Project>

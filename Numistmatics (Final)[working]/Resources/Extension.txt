@@ -1,0 +1,1 @@
+here ".ndb" stands for Numistmatic database backup file

@@ -2607,4 +2607,25 @@ Public Class frmNotes
     Private Sub Button12_MouseLeave(sender As Object, e As EventArgs) Handles Button12.MouseLeave
         Button12.Image = My.Resources.Refresh1
     End Sub
+
+    Private Sub TableDataGridView_CellEnter(sender As Object, e As DataGridViewCellEventArgs) Handles TableDataGridView.CellEnter
+        Frontal_ImagePictureBox.Image = Nothing
+        Backward_ImagePictureBox.Image = Nothing
+
+        If Frontal_ImageTextBox.Text = Nothing Then
+        Else
+            Dim a As String
+            a = Frontal_ImageTextBox.Text
+            Frontal_ImagePictureBox.ImageLocation = Application.StartupPath & "\" & folder & "\" & a
+            a = Nothing
+        End If
+
+        If Backward_ImageTextBox.Text = Nothing Then
+        Else
+            Dim b As String
+            b = Backward_ImageTextBox.Text
+            Backward_ImagePictureBox.ImageLocation = Application.StartupPath & "\" & folder & "\" & b
+            b = Nothing
+        End If
+    End Sub
 End Class

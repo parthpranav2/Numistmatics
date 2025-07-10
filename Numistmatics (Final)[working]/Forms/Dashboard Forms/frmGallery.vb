@@ -10,12 +10,6 @@ Public Class frmGallery
     Private Const IMAGES_FOLDER As String = "Images"
     Private ReadOnly FullImagesPath As String = Path.Combine(Application.StartupPath, RESOURCES_FOLDER, IMAGES_FOLDER)
 
-    ' --- Form References (Initialize these in your main application startup or constructor) ---
-    Private frmDashboard As frmDashboard ' Assuming this form exists
-    Private frmBackupRestore As frmBackupRestore ' Assuming this form exists
-
-
-
     ' --- Form Closure ---
     Private Sub frmGallery_FormClosed(sender As Object, e As FormClosedEventArgs) Handles MyBase.FormClosed
         ' Ensure frmDashboard is initialized

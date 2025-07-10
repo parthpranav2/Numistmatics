@@ -191,7 +191,8 @@ Public Class frmDatabase
         If frmLogin.Visible = True Or frmNotes.Visible = True Or frmCoins.Visible = True Or frmAboutMe.Visible = True Or frmBackupRestore.Visible = True Or frmSetting.Visible = True Or frmDashboard.Visible = True Or frmGallery.Visible = True Or frmInfoCenter.Visible = True Or frmChangeKey.Visible = True Then
             Me.Close()
         Else
-            System.Windows.Forms.Application.Exit()
+            frmDashboard.Show()
+            Me.Close()
         End If
     End Sub
 

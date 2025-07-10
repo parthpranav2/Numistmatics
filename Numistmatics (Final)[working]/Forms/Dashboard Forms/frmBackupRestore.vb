@@ -28,10 +28,7 @@ Public Class frmBackupRestore
     ' State variable for restoration process
     Private NewRestored As Boolean = False
 
-    ' --- Form References (Initialize these in your main application startup or constructor) ---
-    Private frmDashboard As frmDashboard ' Assuming this form exists
-    Private frmLogin As frmLogin ' Assuming this form exists
-    Private frmDatabase As frmDatabase ' Assuming this form exists
+
 
     ' --- Password Hashing Helper Functions (Copied from frmChangeKey, or reference a shared module) ---
     ' In a real application, extract these to a dedicated utility class/module.

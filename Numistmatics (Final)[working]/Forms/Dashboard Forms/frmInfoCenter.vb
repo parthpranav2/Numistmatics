@@ -3,9 +3,7 @@ Imports System.Windows.Forms ' For MessageBox, etc.
 
 Public Class frmInfoCenter
 
-    ' --- Form References (Initialize these in your main application startup or constructor) ---
-    Private frmDashboard As frmDashboard ' Assuming this form exists
-    Private frmLogin As frmLogin ' Assuming this form exists
+
 
     ' --- Helper Function for Network Check ---
     Private Function CheckNetworkAndNotify() As Boolean
@@ -90,7 +88,6 @@ Public Class frmInfoCenter
 
     Private Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click ' Go to Dashboard
         ' Ensure frmDashboard is initialized
-
         frmDashboard.Show()
         Me.Hide() ' Hide this form
     End Sub

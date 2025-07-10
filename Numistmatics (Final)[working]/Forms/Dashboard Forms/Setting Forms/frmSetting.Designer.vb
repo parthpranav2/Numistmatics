@@ -22,13 +22,9 @@ Partial Class frmSetting
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Me.components = New System.ComponentModel.Container()
         Dim Label2 As System.Windows.Forms.Label
         Dim Label1 As System.Windows.Forms.Label
         Dim Currency_NameLabel As System.Windows.Forms.Label
-        Dim DataGridViewCellStyle3 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
-        Dim DataGridViewCellStyle1 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
-        Dim DataGridViewCellStyle2 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmSetting))
         Me.Button3 = New System.Windows.Forms.Button()
         Me.Button2 = New System.Windows.Forms.Button()
@@ -38,26 +34,14 @@ Partial Class frmSetting
         Me.OpenFileDialog1 = New System.Windows.Forms.OpenFileDialog()
         Me.Button6 = New System.Windows.Forms.Button()
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
-        Me.Button4 = New System.Windows.Forms.Button()
-        Me.TableDataGridView = New System.Windows.Forms.DataGridView()
-        Me.DataGridViewTextBoxColumn1 = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.DataGridViewTextBoxColumn5 = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.DataGridViewTextBoxColumn8 = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.TableBindingSource = New System.Windows.Forms.BindingSource(Me.components)
-        Me.Currency_Short_NamesDataSet = New Numistmatics__Final__working_.Currency_Short_NamesDataSet()
-        Me.TableTableAdapter = New Numistmatics__Final__working_.Currency_Short_NamesDataSetTableAdapters.TableTableAdapter()
-        Me.TableAdapterManager = New Numistmatics__Final__working_.Currency_Short_NamesDataSetTableAdapters.TableAdapterManager()
         Me.Button5 = New System.Windows.Forms.Button()
+        Me.Button4 = New System.Windows.Forms.Button()
         Label2 = New System.Windows.Forms.Label()
         Label1 = New System.Windows.Forms.Label()
         Currency_NameLabel = New System.Windows.Forms.Label()
         CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SplitContainer1.Panel1.SuspendLayout()
-        Me.SplitContainer1.Panel2.SuspendLayout()
         Me.SplitContainer1.SuspendLayout()
-        CType(Me.TableDataGridView, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.TableBindingSource, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.Currency_Short_NamesDataSet, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'Label2
@@ -175,86 +159,9 @@ Partial Class frmSetting
         Me.SplitContainer1.Panel1.Controls.Add(Me.TextBox1)
         Me.SplitContainer1.Panel1.Controls.Add(Label1)
         Me.SplitContainer1.Panel1.Controls.Add(Me.Button2)
-        '
-        'SplitContainer1.Panel2
-        '
-        Me.SplitContainer1.Panel2.Controls.Add(Me.TableDataGridView)
         Me.SplitContainer1.Size = New System.Drawing.Size(920, 613)
         Me.SplitContainer1.SplitterDistance = 493
         Me.SplitContainer1.TabIndex = 74
-        '
-        'Button4
-        '
-        Me.Button4.Cursor = System.Windows.Forms.Cursors.Hand
-        Me.Button4.Location = New System.Drawing.Point(299, 405)
-        Me.Button4.Name = "Button4"
-        Me.Button4.Size = New System.Drawing.Size(129, 104)
-        Me.Button4.TabIndex = 74
-        Me.Button4.Text = "Change Password"
-        Me.Button4.UseVisualStyleBackColor = True
-        '
-        'TableDataGridView
-        '
-        Me.TableDataGridView.AutoGenerateColumns = False
-        Me.TableDataGridView.BackgroundColor = System.Drawing.Color.White
-        Me.TableDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.TableDataGridView.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.DataGridViewTextBoxColumn1, Me.DataGridViewTextBoxColumn5, Me.DataGridViewTextBoxColumn8})
-        Me.TableDataGridView.DataSource = Me.TableBindingSource
-        Me.TableDataGridView.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.TableDataGridView.Location = New System.Drawing.Point(0, 0)
-        Me.TableDataGridView.Name = "TableDataGridView"
-        Me.TableDataGridView.ReadOnly = True
-        DataGridViewCellStyle3.BackColor = System.Drawing.Color.MediumTurquoise
-        Me.TableDataGridView.RowsDefaultCellStyle = DataGridViewCellStyle3
-        Me.TableDataGridView.Size = New System.Drawing.Size(423, 613)
-        Me.TableDataGridView.TabIndex = 0
-        '
-        'DataGridViewTextBoxColumn1
-        '
-        Me.DataGridViewTextBoxColumn1.DataPropertyName = "ID"
-        Me.DataGridViewTextBoxColumn1.HeaderText = "ID"
-        Me.DataGridViewTextBoxColumn1.Name = "DataGridViewTextBoxColumn1"
-        Me.DataGridViewTextBoxColumn1.ReadOnly = True
-        Me.DataGridViewTextBoxColumn1.Width = 50
-        '
-        'DataGridViewTextBoxColumn5
-        '
-        Me.DataGridViewTextBoxColumn5.DataPropertyName = "Country_Currency"
-        DataGridViewCellStyle1.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.DataGridViewTextBoxColumn5.DefaultCellStyle = DataGridViewCellStyle1
-        Me.DataGridViewTextBoxColumn5.HeaderText = "Country_Currency"
-        Me.DataGridViewTextBoxColumn5.Name = "DataGridViewTextBoxColumn5"
-        Me.DataGridViewTextBoxColumn5.ReadOnly = True
-        '
-        'DataGridViewTextBoxColumn8
-        '
-        Me.DataGridViewTextBoxColumn8.DataPropertyName = "Abbriviated_Names"
-        DataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter
-        DataGridViewCellStyle2.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.DataGridViewTextBoxColumn8.DefaultCellStyle = DataGridViewCellStyle2
-        Me.DataGridViewTextBoxColumn8.HeaderText = "Abbriviated_Names"
-        Me.DataGridViewTextBoxColumn8.Name = "DataGridViewTextBoxColumn8"
-        Me.DataGridViewTextBoxColumn8.ReadOnly = True
-        '
-        'TableBindingSource
-        '
-        Me.TableBindingSource.DataMember = "Table"
-        Me.TableBindingSource.DataSource = Me.Currency_Short_NamesDataSet
-        '
-        'Currency_Short_NamesDataSet
-        '
-        Me.Currency_Short_NamesDataSet.DataSetName = "Currency_Short_NamesDataSet"
-        Me.Currency_Short_NamesDataSet.SchemaSerializationMode = System.Data.SchemaSerializationMode.IncludeSchema
-        '
-        'TableTableAdapter
-        '
-        Me.TableTableAdapter.ClearBeforeFill = True
-        '
-        'TableAdapterManager
-        '
-        Me.TableAdapterManager.BackupDataSetBeforeUpdate = False
-        Me.TableAdapterManager.TableTableAdapter = Me.TableTableAdapter
-        Me.TableAdapterManager.UpdateOrder = Numistmatics__Final__working_.Currency_Short_NamesDataSetTableAdapters.TableAdapterManager.UpdateOrderOption.InsertUpdateDelete
         '
         'Button5
         '
@@ -266,6 +173,16 @@ Partial Class frmSetting
         Me.Button5.Size = New System.Drawing.Size(22, 22)
         Me.Button5.TabIndex = 75
         Me.Button5.UseVisualStyleBackColor = True
+        '
+        'Button4
+        '
+        Me.Button4.Cursor = System.Windows.Forms.Cursors.Hand
+        Me.Button4.Location = New System.Drawing.Point(299, 405)
+        Me.Button4.Name = "Button4"
+        Me.Button4.Size = New System.Drawing.Size(129, 104)
+        Me.Button4.TabIndex = 74
+        Me.Button4.Text = "Change Password"
+        Me.Button4.UseVisualStyleBackColor = True
         '
         'frmSetting
         '
@@ -280,12 +197,8 @@ Partial Class frmSetting
         Me.Text = "Setting"
         Me.SplitContainer1.Panel1.ResumeLayout(False)
         Me.SplitContainer1.Panel1.PerformLayout()
-        Me.SplitContainer1.Panel2.ResumeLayout(False)
         CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.SplitContainer1.ResumeLayout(False)
-        CType(Me.TableDataGridView, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.TableBindingSource, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.Currency_Short_NamesDataSet, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
 
     End Sub
@@ -298,17 +211,9 @@ Partial Class frmSetting
     Friend WithEvents OpenFileDialog1 As OpenFileDialog
     Friend WithEvents Button6 As Button
     Friend WithEvents SplitContainer1 As SplitContainer
-    Friend WithEvents Currency_Short_NamesDataSet As Currency_Short_NamesDataSet
-    Friend WithEvents TableBindingSource As BindingSource
-    Friend WithEvents TableTableAdapter As Currency_Short_NamesDataSetTableAdapters.TableTableAdapter
-    Friend WithEvents TableAdapterManager As Currency_Short_NamesDataSetTableAdapters.TableAdapterManager
     Friend WithEvents DataGridViewTextBoxColumn2 As DataGridViewTextBoxColumn
     Friend WithEvents DataGridViewTextBoxColumn3 As DataGridViewTextBoxColumn
     Friend WithEvents Button4 As Button
     Friend WithEvents DataGridViewTextBoxColumn4 As DataGridViewTextBoxColumn
-    Friend WithEvents TableDataGridView As DataGridView
-    Friend WithEvents DataGridViewTextBoxColumn1 As DataGridViewTextBoxColumn
-    Friend WithEvents DataGridViewTextBoxColumn5 As DataGridViewTextBoxColumn
-    Friend WithEvents DataGridViewTextBoxColumn8 As DataGridViewTextBoxColumn
     Friend WithEvents Button5 As Button
 End Class

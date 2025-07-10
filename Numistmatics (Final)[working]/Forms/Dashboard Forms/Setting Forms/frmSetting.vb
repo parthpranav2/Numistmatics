@@ -1,26 +1,47 @@
-﻿Public Class frmSetting
+﻿Imports System.IO ' For Path.Combine and File.Exists
+Imports System.Windows.Forms ' For MessageBox, etc.
+Imports System.Diagnostics ' For Process.Start
+
+Public Class frmSetting
     Dim filename As String
 
-    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
-        If OpenFileDialog1.ShowDialog = DialogResult.OK Then
-            filename = OpenFileDialog1.FileName
-            My.Settings.ScannerDrive = filename
-            TextBox1.Text = OpenFileDialog1.FileName
-        End If
+    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click ' Select Scanner Driver
+        Using OpenFileDialog1 As New OpenFileDialog()
+            OpenFileDialog1.Title = "Select Scanner Driver Executable"
+            OpenFileDialog1.Filter = "Executable Files (*.exe)|*.exe|All Files (*.*)|*.*"
+            OpenFileDialog1.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) ' Suggest a common program files path
+            OpenFileDialog1.RestoreDirectory = True
+
+            If OpenFileDialog1.ShowDialog() = DialogResult.OK Then
+                My.Settings.ScannerDrive = OpenFileDialog1.FileName ' Update setting
+                TextBox1.Text = OpenFileDialog1.FileName ' Update UI
+                My.Settings.Save() ' Save settings immediately after change
+                MessageBox.Show("Scanner driver path saved successfully.", "Setting Saved", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            End If
+        End Using
     End Sub
 
-    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
-        If filename = Nothing Or TextBox1.Text = Nothing Then
-            MsgBox("There is no scanner driver silected so please re-select it", +vbOKOnly + vbExclamation)
-        Else
-            Try
-                MsgBox("Testing Connection")
-                System.Diagnostics.Process.Start("" + filename)
-                MsgBox("Connection Established")
-            Catch ex As Exception
-                MsgBox("Connection Failed")
-            End Try
+    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click ' Test Scanner Connection
+        If String.IsNullOrWhiteSpace(My.Settings.ScannerDrive) Then
+            MessageBox.Show("No scanner driver path has been selected. Please select one first.", "Missing Driver", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            Return
         End If
+
+        Try
+            MessageBox.Show("Attempting to test connection to scanner driver...", "Testing Connection", MessageBoxButtons.OK, MessageBoxIcon.Information)
+
+            If File.Exists(My.Settings.ScannerDrive) Then
+                System.Diagnostics.Process.Start(My.Settings.ScannerDrive)
+                MessageBox.Show("Connection test initiated. Please check the scanner application.", "Connection Established", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Else
+                MessageBox.Show($"Scanner driver file not found at: {My.Settings.ScannerDrive}{Environment.NewLine}Please re-select the correct file.", "File Not Found", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                Console.WriteLine($"Error: Scanner driver file not found at {My.Settings.ScannerDrive}")
+            End If
+        Catch ex As Exception
+            ' Log the specific error for debugging
+            Console.WriteLine($"Error testing scanner connection: {ex.Message}{Environment.NewLine}{ex.StackTrace}")
+            MessageBox.Show($"Connection Failed: An error occurred while trying to start the scanner driver. Details: {ex.Message}", "Connection Failed", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
@@ -30,49 +51,64 @@
     End Sub
 
     Private Sub frmSetting_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        Try
-            'TODO: This line of code loads data into the 'Currency_Short_NamesDataSet.Table' table. You can move, or remove it, as needed.
-            Me.TableTableAdapter.Fill(Me.Currency_Short_NamesDataSet.Table)
-        Catch ex As Exception
-            MsgBox("Unable to load the database, please try to restore or reset the database from the Backup and Restore window. The program will redirect you to the Backup and Restore form", vbOKOnly + vbCritical)
-            frmBackupRestore.Show()
-            frmBackupRestore.tabRestore.Show()
-            Me.Hide()
-        End Try
         txtTocurrency.Text = My.Settings.ToCurrency
         TextBox1.Text = My.Settings.ScannerDrive
     End Sub
 
     Private Sub frmSetting_FormClosed(sender As Object, e As FormClosedEventArgs) Handles MyBase.FormClosed
-        TextBox1.Text = My.Settings.ScannerDrive
+        ' Ensure all settings are saved one last time on form close
+        My.Settings.ToCurrency = txtTocurrency.Text ' Capture any last-minute changes
         My.Settings.Save()
-        System.Windows.Forms.Application.Exit()
+
+        ' Only exit the application if no other forms are open,
+        ' allowing for graceful shutdown.
+        If Application.OpenForms.Count = 0 Then
+            System.Windows.Forms.Application.Exit()
+        End If
     End Sub
 
-    Private Sub Button6_Click(sender As Object, e As EventArgs) Handles Button6.Click
-        TextBox1.Text = My.Settings.ScannerDrive
+    Private Sub Button6_Click(sender As Object, e As EventArgs) Handles Button6.Click ' Go to Dashboard
+        ' Save current settings before navigating away
+        My.Settings.ToCurrency = txtTocurrency.Text ' Assuming txtTocurrency is where 'ToCurrency' is set
         My.Settings.Save()
+
+        ' Ensure frmDashboard is initialized
+        If frmDashboard Is Nothing OrElse frmDashboard.IsDisposed Then
+            frmDashboard = New frmDashboard()
+        End If
         frmDashboard.Show()
         Me.Hide()
     End Sub
 
-    Private Sub TableBindingNavigatorSaveItem_Click(sender As Object, e As EventArgs)
-        Me.Validate()
-        Me.TableBindingSource.EndEdit()
-        Me.TableAdapterManager.UpdateAll(Me.Currency_Short_NamesDataSet)
 
-    End Sub
 
-    Private Sub TextBox1_TextChanged(sender As Object, e As EventArgs) Handles TextBox1.TextChanged
 
-    End Sub
+    Private Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click ' Go to Change Key
+        ' Save current settings before navigating away
+        My.Settings.ToCurrency = txtTocurrency.Text ' Assuming txtTocurrency is where 'ToCurrency' is set
+        My.Settings.Save()
 
-    Private Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click
+        ' Ensure frmChangeKey is initialized
+        If frmChangeKey Is Nothing OrElse frmChangeKey.IsDisposed Then
+            frmChangeKey = New frmChangeKey()
+        End If
         frmChangeKey.Show()
         Me.Hide()
     End Sub
 
-    Private Sub Button5_Click(sender As Object, e As EventArgs) Handles Button5.Click
+
+    Private Sub Button5_Click(sender As Object, e As EventArgs) Handles Button5.Click ' Go to Login/Ending
+        ' Save current settings before navigating away
+        My.Settings.ToCurrency = txtTocurrency.Text ' Assuming txtTocurrency is where 'ToCurrency' is set
+        My.Settings.Save()
+
+        ' Assuming frmLogin.Ending() handles application exit or return to login
+        ' Ensure frmLogin is initialized if it's not a shared instance
+        If frmLogin Is Nothing OrElse frmLogin.IsDisposed Then
+            frmLogin = New frmLogin()
+        End If
         frmLogin.Ending()
     End Sub
+
+
 End Class

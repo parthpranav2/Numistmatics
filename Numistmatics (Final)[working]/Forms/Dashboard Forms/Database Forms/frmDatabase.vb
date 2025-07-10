@@ -15,15 +15,7 @@ Public Class frmDatabase
     Private ReadOnly FullImagePath As String = Path.Combine(Application.StartupPath, ResourcesFolder, ImagesFolder)
 
 
-    ' Initialize forms in the constructor or Load event if they are always needed
-    Public Sub New()
-        InitializeComponent()
-        ' Initialize related forms here if they are single instances
-        frmECoins = New frmECoins()
-        frmENotes = New frmENotes()
-        frmBackupRestore = New frmBackupRestore()
-        ' ... initialize others as needed
-    End Sub
+
 
     Private Sub TableBindingNavigatorSaveItem_Click(sender As Object, e As EventArgs)
         Me.Validate()
@@ -977,10 +969,7 @@ Public Class frmDatabase
 
         Dim row As DataGridViewRow = TableDataGridView1.Rows(e.RowIndex)
 
-        ' Ensure frmENotes is initialized before accessing its controls
-        If frmENotes Is Nothing OrElse frmENotes.IsDisposed Then
-            frmENotes = New frmENotes()
-        End If
+
 
         ' Always clear images first
         Frontal_ImagePictureBox.Image = Nothing

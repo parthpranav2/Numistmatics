@@ -101,9 +101,7 @@ Public Class frmChangeKey
 
     Private Sub Button6_Click(sender As Object, e As EventArgs) Handles Button6.Click ' Go to Settings
         ' Ensure frmSetting is initialized
-        If frmSetting Is Nothing OrElse frmSetting.IsDisposed Then
-            frmSetting = New frmSetting()
-        End If
+
         frmSetting.Show()
         Me.Hide()
     End Sub
@@ -188,9 +186,7 @@ Public Class frmChangeKey
     Private Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click ' Go to Login/Ending
         ' Assuming frmLogin.Ending() handles application exit or return to login
         ' Ensure frmLogin is initialized if it's not a shared instance
-        If frmLogin Is Nothing OrElse frmLogin.IsDisposed Then
-            frmLogin = New frmLogin()
-        End If
+
         frmLogin.Ending()
     End Sub
 

@@ -107,9 +107,7 @@ Public Class frmBackupRestore
     Private Sub frmBackupRestore_FormClosed(sender As Object, e As FormClosedEventArgs) Handles MyBase.FormClosed
         ' Only show Dashboard if it's not already visible and not explicitly exiting application
         If Not NewRestored Then ' Only navigate back if no new restore was performed
-            If frmDashboard Is Nothing OrElse frmDashboard.IsDisposed Then
-                frmDashboard = New frmDashboard()
-            End If
+
             frmDashboard.Show()
         End If
 
@@ -130,9 +128,7 @@ Public Class frmBackupRestore
         End If
 
         ' Ensure frmDashboard is initialized
-        If frmDashboard Is Nothing OrElse frmDashboard.IsDisposed Then
-            frmDashboard = New frmDashboard()
-        End If
+
         frmDashboard.Show()
         Me.Close() ' Close this form, let the application continue
     End Sub

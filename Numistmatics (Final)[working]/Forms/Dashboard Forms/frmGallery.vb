@@ -19,9 +19,7 @@ Public Class frmGallery
     ' --- Form Closure ---
     Private Sub frmGallery_FormClosed(sender As Object, e As FormClosedEventArgs) Handles MyBase.FormClosed
         ' Ensure frmDashboard is initialized
-        If frmDashboard Is Nothing OrElse frmDashboard.IsDisposed Then
-            frmDashboard = New frmDashboard()
-        End If
+
         frmDashboard.Show()
         ' Do not call Application.Exit() here unless this is the very last form to close
         ' and you intend to terminate the entire application.
@@ -30,9 +28,7 @@ Public Class frmGallery
     ' --- Navigation Buttons ---
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click ' Go to Dashboard
         ' Ensure frmDashboard is initialized
-        If frmDashboard Is Nothing OrElse frmDashboard.IsDisposed Then
-            frmDashboard = New frmDashboard()
-        End If
+
         frmDashboard.Show()
         Me.Close() ' Close this form
     End Sub
@@ -55,9 +51,7 @@ Public Class frmGallery
             MessageBox.Show($"Database error loading notes data for gallery: {ex.Message}{Environment.NewLine}Please ensure 'Notes.accdb' and its TableAdapter are correctly configured.", "Database Load Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Console.WriteLine($"OleDbException (Gallery Load): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
             ' Redirect to backup/restore on critical failure
-            If frmBackupRestore Is Nothing OrElse frmBackupRestore.IsDisposed Then
-                frmBackupRestore = New frmBackupRestore()
-            End If
+
             frmBackupRestore.Show()
             ' Assuming tabRestore is a TabPage or similar control on frmBackupRestore
             frmBackupRestore.tabRestore.Show() ' Or frmBackupRestore.TabControl.SelectTab(1)

@@ -90,9 +90,7 @@ Public Class frmInfoCenter
 
     Private Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click ' Go to Dashboard
         ' Ensure frmDashboard is initialized
-        If frmDashboard Is Nothing OrElse frmDashboard.IsDisposed Then
-            frmDashboard = New frmDashboard()
-        End If
+
         frmDashboard.Show()
         Me.Hide() ' Hide this form
     End Sub
@@ -107,9 +105,7 @@ Public Class frmInfoCenter
 
     Private Sub Button7_Click(sender As Object, e As EventArgs) Handles Button7.Click ' Go to Login/Ending
         ' Ensure frmLogin is initialized if it's not a shared instance
-        If frmLogin Is Nothing OrElse frmLogin.IsDisposed Then
-            frmLogin = New frmLogin()
-        End If
+
         frmLogin.Ending() ' Assuming frmLogin.Ending() handles application exit or return to login
     End Sub
 

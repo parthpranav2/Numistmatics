@@ -72,10 +72,7 @@ Public Class frmSetting
         My.Settings.ToCurrency = txtTocurrency.Text ' Assuming txtTocurrency is where 'ToCurrency' is set
         My.Settings.Save()
 
-        ' Ensure frmDashboard is initialized
-        If frmDashboard Is Nothing OrElse frmDashboard.IsDisposed Then
-            frmDashboard = New frmDashboard()
-        End If
+
         frmDashboard.Show()
         Me.Hide()
     End Sub
@@ -88,10 +85,7 @@ Public Class frmSetting
         My.Settings.ToCurrency = txtTocurrency.Text ' Assuming txtTocurrency is where 'ToCurrency' is set
         My.Settings.Save()
 
-        ' Ensure frmChangeKey is initialized
-        If frmChangeKey Is Nothing OrElse frmChangeKey.IsDisposed Then
-            frmChangeKey = New frmChangeKey()
-        End If
+
         frmChangeKey.Show()
         Me.Hide()
     End Sub
@@ -104,9 +98,7 @@ Public Class frmSetting
 
         ' Assuming frmLogin.Ending() handles application exit or return to login
         ' Ensure frmLogin is initialized if it's not a shared instance
-        If frmLogin Is Nothing OrElse frmLogin.IsDisposed Then
-            frmLogin = New frmLogin()
-        End If
+
         frmLogin.Ending()
     End Sub
 

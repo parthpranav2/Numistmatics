@@ -130,7 +130,7 @@ Public Class frmNotes
             MessageBox.Show($"Database error saving record: {ex.Message}{Environment.NewLine}Please check your data for validity.", "Save Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Console.WriteLine($"OleDbException (Save): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
             ' You might want to reject changes in the DataTable if the save fails
-            ' NotesDataSet.RejectChanges()
+            NotesDataSet.RejectChanges()
         Catch ex As Exception
             ' General handling for other unexpected errors during save
             MessageBox.Show($"An unexpected error occurred while saving the record: {ex.Message}", "Save Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -169,13 +169,6 @@ Public Class frmNotes
                 Me.TableBindingSource.RemoveCurrent() ' Marks the current row in BindingSource/DataTable for deletion
                 Me.TableTableAdapter.Update(NotesDataSet.Table) ' Commits the deletion to the database
 
-                ' Option 2: Direct SQL DELETE (less common with TableAdapters, but shown as in your original code)
-                ' If you prefer direct SQL, ensure connection is opened/closed properly.
-                ' Using conn As New OleDbConnection(ConnectionString)
-                '     Dim cmd As New OleDbCommand($"DELETE FROM [Table] WHERE ID={recordID};", conn)
-                '     conn.Open()
-                '     cmd.ExecuteNonQuery()
-                ' End Using
 
                 ' After successful deletion, accept changes in the DataSet
                 NotesDataSet.AcceptChanges()
@@ -1090,5 +1083,7 @@ Public Class frmNotes
         Button12.Image = My.Resources.Refresh1
     End Sub
 
+    Private Sub GroupBox1_Enter(sender As Object, e As EventArgs) Handles GroupBox1.Enter
 
+    End Sub
 End Class

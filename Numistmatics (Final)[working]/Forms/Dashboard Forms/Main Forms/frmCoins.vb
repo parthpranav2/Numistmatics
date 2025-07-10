@@ -9,33 +9,30 @@ Public Class frmCoins
 
     ' --- Form Load and Initialization ---
     Private Sub frmCoins_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        ' It's good practice to ensure TableAdapter and DataSet are initialized.
-        ' If they are not auto-instantiated by the designer, uncomment and adjust these lines:
-        ' Me.CoinsDataSet = New CoinsDataSet()
-        ' Me.TableTableAdapter = New CoinsDataSetTableAdapters.TableTableAdapter()
-        ' Me.TableBindingSource = New BindingSource()
-        ' Me.TableBindingSource.DataSource = Me.CoinsDataSet
-        ' Me.TableBindingSource.DataMember = "Table"
-        ' Me.TableTableAdapter.Fill(Me.CoinsDataSet.Table) ' Initial fill for the main table
-        ' Me.TableDataGridView.DataSource = Me.TableBindingSource ' Bind DataGridView if not done in designer
 
-        ActiveControl = ContinentComboBox ' Set initial focus
+        Me.CoinsDataSet = New CoinsDataSet()
+        Me.TableTableAdapter = New CoinsDataSetTableAdapters.TableTableAdapter()
+        Me.TableBindingSource = New BindingSource()
+        Me.TableBindingSource.DataSource = Me.CoinsDataSet
+        Me.TableBindingSource.DataMember = "Table"
+        Me.TableTableAdapter.Fill(Me.CoinsDataSet.Table)
+        Me.TableDataGridView.DataSource = Me.TableBindingSource
 
-        ' Load data into the main 'CoinsDataSet.Table' table.
+        ActiveControl = ContinentComboBox
+
+
         Try
-            RefreshDatabase() ' Call the robust refresh method
+            RefreshDatabase()
         Catch ex As Exception
-            ' This catch block is for the initial load of the main database.
-            ' The RefreshDatabase method itself has error handling.
             MessageBox.Show("Unable to load the main database during startup. The program will redirect you to the Backup and Restore form.", "Critical Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
             Console.WriteLine($"Startup Database Load Error: {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-            ' Assuming frmBackupRestore and its controls exist
-            ' frmBackupRestore.Show()
-            ' frmBackupRestore.TabControl.SelectTab(1)
-            ' Me.Hide()
+
+            frmBackupRestore.Show()
+            frmBackupRestore.TabControl.SelectTab(1)
+            Me.Hide()
         End Try
 
-        ' Load data into the 'Currency_Short_NamesDataSet.Table' table.
+
         Try
             Me.TableTableAdapter2.Fill(Me.Currency_Short_NamesDataSet.Table)
         Catch ex As OleDbException
@@ -48,25 +45,22 @@ Public Class frmCoins
 
         CountryComboBox.Text = Nothing
         Currency_NameComboBox.Text = Nothing
-        CheckEnteries() ' Check initial entry validity
+        CheckEnteries()
     End Sub
 
 
     ' --- Data Retrieval (Refresh) ---
     Public Sub RefreshDatabase()
         Try
-            ' Use the TableAdapter to fill the DataSet's Table.
-            ' This re-fetches all data from the database.
             Me.TableTableAdapter.Fill(Me.CoinsDataSet.Table)
-            ' After filling, if the BindingSource is correctly linked,
-            ' the DataGridView will automatically update.
+
         Catch ex As OleDbException
             MessageBox.Show($"Database error refreshing data: {ex.Message}{Environment.NewLine}Please check your database connection and table schema.", "Database Refresh Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Console.WriteLine($"OleDbException (RefreshDatabase): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-            ' Optionally, redirect to backup/restore form on critical refresh failure
-            ' frmBackupRestore.Show()
-            ' frmBackupRestore.TabControl.SelectTab(1)
-            ' Me.Hide()
+
+            frmBackupRestore.Show()
+            frmBackupRestore.TabControl.SelectTab(1)
+            Me.Hide()
         Catch ex As Exception
             MessageBox.Show($"An unexpected error occurred during data refresh: {ex.Message}", "Refresh Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Console.WriteLine($"Exception (RefreshDatabase): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
@@ -102,7 +96,7 @@ Public Class frmCoins
             MessageBox.Show($"Database error saving record: {ex.Message}{Environment.NewLine}Please check your data for validity.", "Save Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Console.WriteLine($"OleDbException (Save): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
             ' You might want to reject changes in the DataTable if the save fails
-            ' CoinsDataSet.RejectChanges()
+            CoinsDataSet.RejectChanges()
         Catch ex As Exception
             ' General handling for other unexpected errors during save
             MessageBox.Show($"An unexpected error occurred while saving the record: {ex.Message}", "Save Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -468,5 +462,9 @@ Public Class frmCoins
 
     Private Sub Button6_MouseLeave(sender As Object, e As EventArgs) Handles Button6.MouseLeave
         Button6.Image = My.Resources.Refresh1
+    End Sub
+
+    Private Sub SplitContainer1_Panel1_Paint(sender As Object, e As PaintEventArgs) Handles SplitContainer1.Panel1.Paint
+
     End Sub
 End Class

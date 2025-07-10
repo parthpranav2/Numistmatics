@@ -38,10 +38,10 @@ Partial Class frmCoins
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
         Me.GroupBox4 = New System.Windows.Forms.GroupBox()
         Me.FlowLayoutPanel1 = New System.Windows.Forms.FlowLayoutPanel()
+        Me.Button6 = New System.Windows.Forms.Button()
         Me.Button5 = New System.Windows.Forms.Button()
         Me.Button3 = New System.Windows.Forms.Button()
         Me.Button4 = New System.Windows.Forms.Button()
-        Me.Button6 = New System.Windows.Forms.Button()
         Me.GroupBox3 = New System.Windows.Forms.GroupBox()
         Me.cmbtxtSearch = New System.Windows.Forms.ComboBox()
         Me.butReset = New System.Windows.Forms.Button()
@@ -270,6 +270,18 @@ Partial Class frmCoins
         Me.FlowLayoutPanel1.Size = New System.Drawing.Size(420, 92)
         Me.FlowLayoutPanel1.TabIndex = 41
         '
+        'Button6
+        '
+        Me.Button6.Cursor = System.Windows.Forms.Cursors.Hand
+        Me.Button6.Image = Global.Numistmatics__Final__working_.My.Resources.Resources.Refresh1
+        Me.Button6.Location = New System.Drawing.Point(3, 3)
+        Me.Button6.Name = "Button6"
+        Me.Button6.Size = New System.Drawing.Size(99, 86)
+        Me.Button6.TabIndex = 3
+        Me.Button6.Text = "Refresh"
+        Me.Button6.TextAlign = System.Drawing.ContentAlignment.TopCenter
+        Me.Button6.UseVisualStyleBackColor = True
+        '
         'Button5
         '
         Me.Button5.Cursor = System.Windows.Forms.Cursors.Hand
@@ -305,18 +317,6 @@ Partial Class frmCoins
         Me.Button4.Text = "More"
         Me.Button4.TextAlign = System.Drawing.ContentAlignment.TopCenter
         Me.Button4.UseVisualStyleBackColor = True
-        '
-        'Button6
-        '
-        Me.Button6.Cursor = System.Windows.Forms.Cursors.Hand
-        Me.Button6.Image = Global.Numistmatics__Final__working_.My.Resources.Resources.Refresh1
-        Me.Button6.Location = New System.Drawing.Point(3, 3)
-        Me.Button6.Name = "Button6"
-        Me.Button6.Size = New System.Drawing.Size(99, 86)
-        Me.Button6.TabIndex = 3
-        Me.Button6.Text = "Refresh"
-        Me.Button6.TextAlign = System.Drawing.ContentAlignment.TopCenter
-        Me.Button6.UseVisualStyleBackColor = True
         '
         'GroupBox3
         '

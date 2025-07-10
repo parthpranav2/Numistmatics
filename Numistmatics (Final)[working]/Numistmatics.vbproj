@@ -297,14 +297,14 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Coins.accdb">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Currency_Short_Names.accdb">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="icons8_notes_and_coins_euro_100_rCL_icon.ico" />
     <Content Include="Notes.accdb">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Resources\icons8-close-window-20.png" />
     <None Include="Resources\icons8-currency-exchange-50.png" />

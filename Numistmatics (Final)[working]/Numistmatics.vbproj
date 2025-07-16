@@ -92,6 +92,12 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Currency_Short_NamesDataSet.xsd</DependentUpon>
     </Compile>
+    <Compile Include="Forms\frmCustomSplashScreen.Designer.vb">
+      <DependentUpon>frmCustomSplashScreen.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmCustomSplashScreen.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Forms\Dashboard Forms\Database Forms\Extended Screens\frmECoins.Designer.vb">
       <DependentUpon>frmECoins.vb</DependentUpon>
     </Compile>
@@ -200,6 +206,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Forms\frmCustomSplashScreen.resx">
+      <DependentUpon>frmCustomSplashScreen.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\Dashboard Forms\Database Forms\Extended Screens\frmECoins.resx">
       <DependentUpon>frmECoins.vb</DependentUpon>
     </EmbeddedResource>
@@ -235,6 +244,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\Dashboard Forms\Main Forms\frmNotes.resx">
       <DependentUpon>frmNotes.vb</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\frmDashboard.resx">
       <DependentUpon>frmDashboard.vb</DependentUpon>
@@ -306,6 +316,10 @@
     <Content Include="Notes.accdb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\loginScreenPoster.png" />
+    <None Include="Resources\Numismatics.png" />
+    <None Include="Resources\Numismatics.svg" />
+    <None Include="Resources\AppNameWordArt.bmp" />
     <None Include="Resources\icons8-close-window-20.png" />
     <None Include="Resources\icons8-currency-exchange-50.png" />
     <None Include="Resources\icons8-currency-exchange-50 %281%29.png" />

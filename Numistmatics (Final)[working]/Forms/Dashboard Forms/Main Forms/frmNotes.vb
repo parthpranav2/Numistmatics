@@ -2,536 +2,76 @@
 Imports System.Data.OleDb
 
 Public Class frmNotes
-   
+    Dim folderPrimary As String = ("Resources")
+    Dim folderSecondary As String = ("\Images")
     Dim folder As String = ("Resources\Images")
     Dim conn As New OleDbConnection("Provider=microsoft.ACE.OLEDB.12.0;Data Source=" & Application.StartupPath & "\Notes.accdb")
     Dim access As New Control
 
+    Private Sub TableBindingNavigatorSaveItem_Click(sender As Object, e As EventArgs) Handles TableBindingNavigatorSaveItem.Click
+        If SourceTextBox.Text = Nothing Then
+            SourceTextBox.Text = ("(none)")
+        End If
 
-
-
-    Private Const ResourcesFolder As String = "Resources"
-    Private Const ImagesFolder As String = "Images"
-    Private ReadOnly FullImagePath As String = Path.Combine(Application.StartupPath, ResourcesFolder, ImagesFolder)
-
-
-    Private ReadOnly ConnectionString As String = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={Path.Combine(Application.StartupPath, "Notes.accdb")}"
-
-
-    Private Sub frmNotes_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-
-        Me.NotesDataSet = New NotesDataSet()
-        Me.TableTableAdapter = New NotesDataSetTableAdapters.TableTableAdapter()
-        Me.TableBindingSource = New BindingSource()
-        Me.TableBindingSource.DataSource = Me.NotesDataSet
-        Me.TableBindingSource.DataMember = "Table"
-        Me.TableTableAdapter.Fill(Me.NotesDataSet.Table)
-        Me.TableDataGridView.DataSource = Me.TableBindingSource
-
+        'Me.Validate()
+        'Me.TableBindingSource.EndEdit()
+        'Me.TableAdapterManager.UpdateAll(Me.NotesDataSet)
 
         Try
-            Me.TableTableAdapter1.Fill(Me.Currency_Short_NamesDataSet.Table)
-        Catch ex As OleDbException
-            MessageBox.Show($"Database error loading currency names: {ex.Message}{Environment.NewLine}Please ensure 'Currency_Short_NamesDataSet' is correctly configured.", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
-            Console.WriteLine($"OleDbException (Currency Names Load): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
+            TableBindingSource.EndEdit()
+            TableTableAdapter.Update(NotesDataSet.Table)
+
         Catch ex As Exception
-            MessageBox.Show($"An unexpected error occurred loading currency names: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Console.WriteLine($"Exception (Currency Names Load): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
+
         End Try
 
+        RefreshDatabase()
+        ActiveControl = ContinentComboBox
+    End Sub
+
+    Private Sub frmNotes_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        'TODO: This line of code loads data into the 'Currency_Short_NamesDataSet.Table' table. You can move, or remove it, as needed.
+        Me.TableTableAdapter1.Fill(Me.Currency_Short_NamesDataSet.Table)
         CountryComboBox.Text = Nothing
         CheckEnteries()
 
         ActiveControl = ContinentComboBox
 
-
+        'TODO: This line of code loads data into the 'NotesDataSet.Table' table. You can move, or remove it, as needed.
         Try
             RefreshDatabase()
         Catch ex As Exception
-
-            MessageBox.Show("Unable to load the main database during startup. The program may not function correctly.", "Startup Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
-            Console.WriteLine($"Startup Database Load Error: {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-
+            MsgBox("Unable to load the database, please try to restore or reset the database from the Backup and Restore window. The program will redirect you to the Backup and Restore form", vbOKOnly + vbCritical)
             frmBackupRestore.Show()
-            frmBackupRestore.TabControl.SelectTab(1)
+            frmBackupRestore.tabRestore.Show()
             Me.Hide()
         End Try
+        'creating image backup folder
+        If Directory.Exists(folder) Then
+        Else
+            Directory.CreateDirectory(folder)
+        End If
 
+        If Directory.Exists(folderPrimary) Then
+            File.SetAttributes(folderPrimary, FileAttributes.Hidden)
+        Else
+        End If
 
-        If Not Directory.Exists(FullImagePath) Then
-            Directory.CreateDirectory(FullImagePath)
+        If Directory.Exists(folderPrimary & folderSecondary) Then
+            File.SetAttributes(folderPrimary & folderSecondary, FileAttributes.Hidden)
+        Else
         End If
-        If Directory.Exists(Path.Combine(Application.StartupPath, ResourcesFolder)) Then
-            File.SetAttributes(Path.Combine(Application.StartupPath, ResourcesFolder), FileAttributes.Hidden)
-        End If
-        If Directory.Exists(FullImagePath) Then
-            File.SetAttributes(FullImagePath, FileAttributes.Hidden)
-        End If
+
+        Try
+            Me.TableTableAdapter1.Fill(Me.Currency_Short_NamesDataSet.Table)
+        Catch ex As Exception
+            MsgBox("Unable to load the currency names database, some of the functions will not be partially functioning due to this inability. Please try to restore the database if possible.", vbOKOnly + vbExclamation)
+
+        End Try
 
         CountryComboBox.Text = Nothing
         Currency_NameComboBox.Text = Nothing
     End Sub
-
-
-
-
-    ' --- Data Retrieval (Refresh) ---
-    Public Sub RefreshDatabase()
-
-        Frontal_ImagePictureBox.Image = Nothing
-        Backward_ImagePictureBox.Image = Nothing
-        Frontal_ImageTextBox.Text = Nothing ' Also clear textboxes
-        Backward_ImageTextBox.Text = Nothing
-
-        Try
-
-            Me.TableTableAdapter.Fill(Me.NotesDataSet.Table)
-
-        Catch ex As OleDbException
-            MessageBox.Show($"Database error refreshing data: {ex.Message}{Environment.NewLine}Please check your database connection and table schema.", "Database Refresh Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Console.WriteLine($"OleDbException (RefreshDatabase): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-
-            frmBackupRestore.Show()
-            frmBackupRestore.TabControl.SelectTab(1)
-            Me.Hide()
-        Catch ex As Exception
-            MessageBox.Show($"An unexpected error occurred during data refresh: {ex.Message}", "Refresh Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Console.WriteLine($"Exception (RefreshDatabase): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-        End Try
-    End Sub
-
-    ' --- Data Saving/Updating ---
-    Private Sub TableBindingNavigatorSaveItem_Click(sender As Object, e As EventArgs) Handles TableBindingNavigatorSaveItem.Click
-
-        If String.IsNullOrWhiteSpace(SourceTextBox.Text) Then
-            SourceTextBox.Text = "(none)"
-        End If
-
-        Try
-            ' 1. Validate data in bound controls (e.g., DataGridView, TextBoxes)
-            Me.Validate()
-
-            ' 2. End any pending edits on the BindingSource.
-            ' This pushes changes from bound controls into the underlying DataTable.
-            Me.TableBindingSource.EndEdit()
-
-            ' 3. Update the database.
-            ' TableAdapterManager.UpdateAll is typically used for saving changes across multiple
-            ' related tables in a DataSet. If you only have one table or want to be explicit,
-            ' TableTableAdapter.Update(NotesDataSet.Table) is sufficient for the main table.
-            ' Both are present in your original code, so keeping both for consistency,
-            ' but often one is enough depending on your data structure.
-            Me.TableAdapterManager.UpdateAll(Me.NotesDataSet)
-            Me.TableTableAdapter.Update(NotesDataSet.Table)
-
-            MessageBox.Show("Record saved successfully!", "Save Confirmation", MessageBoxButtons.OK, MessageBoxIcon.Information)
-        Catch ex As OleDbException
-            ' Specific handling for database errors (e.g., constraint violations, invalid data types)
-            MessageBox.Show($"Database error saving record: {ex.Message}{Environment.NewLine}Please check your data for validity.", "Save Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Console.WriteLine($"OleDbException (Save): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-            ' You might want to reject changes in the DataTable if the save fails
-            NotesDataSet.RejectChanges()
-        Catch ex As Exception
-            ' General handling for other unexpected errors during save
-            MessageBox.Show($"An unexpected error occurred while saving the record: {ex.Message}", "Save Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Console.WriteLine($"Exception (Save): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-        Finally
-            ' Always refresh data after a save attempt to show the latest state,
-            ' including auto-generated IDs for new records.
-            RefreshDatabase()
-            ActiveControl = ContinentComboBox ' Set focus
-        End Try
-    End Sub
-    ' --- Data Adding ---
-    Private Sub BindingNavigatorAddNewItem_Click(sender As Object, e As EventArgs) Handles BindingNavigatorAddNewItem.Click
-        ActiveControl = ContinentComboBox
-        If String.IsNullOrWhiteSpace(SourceTextBox.Text) Then
-            SourceTextBox.Text = "(none)"
-        End If
-        Frontal_ImagePictureBox.Image = Nothing
-        Backward_ImagePictureBox.Image = Nothing
-    End Sub
-    ' --- Data Deletion ---
-    Private Sub BindingNavigatorDeleteItem_Click(sender As Object, e As EventArgs) Handles BindingNavigatorDeleteItem.Click
-        ' Ensure a record is selected and has a valid ID before attempting deletion.
-        If String.IsNullOrWhiteSpace(IDTextBox.Text) OrElse Not IsNumeric(IDTextBox.Text) OrElse Val(IDTextBox.Text) <= 0 Then
-            MessageBox.Show("Please select a valid, saved record to delete.", "Deletion Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
-            Return
-        End If
-
-        If MessageBox.Show("Are you sure you want to delete this record permanently?", "Confirm Deletion", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
-            Try
-                Dim recordID As Integer = CInt(IDTextBox.Text)
-
-                ' Option 1: Delete directly via TableAdapter (recommended with BindingSource)
-                ' The BindingSource's DeleteItem or RemoveCurrent method would mark the row for deletion,
-                ' and then TableAdapter.Update would commit it.
-                Me.TableBindingSource.RemoveCurrent() ' Marks the current row in BindingSource/DataTable for deletion
-                Me.TableTableAdapter.Update(NotesDataSet.Table) ' Commits the deletion to the database
-
-
-                ' After successful deletion, accept changes in the DataSet
-                NotesDataSet.AcceptChanges()
-
-                MessageBox.Show("The record has been deleted successfully.", "Deletion Successful", MessageBoxButtons.OK, MessageBoxIcon.Information)
-
-            Catch ex As OleDbException
-                MessageBox.Show($"Database error deleting record: {ex.Message}{Environment.NewLine}This might be due to related records in other tables (referential integrity).", "Deletion Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                Console.WriteLine($"OleDbException (Delete): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-                ' If deletion fails, reject changes to revert the DataTable state
-                NotesDataSet.RejectChanges()
-            Catch ex As Exception
-                MessageBox.Show($"An unexpected error occurred while deleting the record: {ex.Message}", "Deletion Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                Console.WriteLine($"Exception (Delete): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-            Finally
-                RefreshDatabase() ' Always refresh data after a delete attempt
-                ActiveControl = ContinentComboBox
-            End Try
-        End If
-    End Sub
-
-    ' --- Data Filtering/Retrieval for Search ---
-    Private Sub cmbCategory_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbCategory.SelectedIndexChanged
-        ' Handles UI logic for search category selection (e.g., showing/hiding DateTimePicker)
-        If cmbCategory.SelectedIndex = 5 Then ' Assuming index 5 is for Date_Recorded_On
-            cmbtxtSearch.Enabled = False
-            dtpSearch.Visible = True
-        Else
-            cmbtxtSearch.Enabled = True
-            dtpSearch.Visible = False
-        End If
-
-        Me.cmbtxtSearch.Text = Nothing
-        TableBindingSource.Filter = Nothing ' Clear previous filter
-
-        ' Reset DataGridView column background colors
-        For i As Integer = 0 To TableDataGridView.Columns.Count - 1
-            TableDataGridView.Columns(i).DefaultCellStyle.BackColor = Color.YellowGreen
-        Next
-
-        ' Highlight selected column
-        If cmbCategory.SelectedIndex >= 0 Then
-            If cmbCategory.SelectedIndex < TableDataGridView.Columns.Count Then
-                ' Direct column index for most cases
-                TableDataGridView.Columns(cmbCategory.SelectedIndex).DefaultCellStyle.BackColor = Color.FromArgb(81, 187, 255)
-            ElseIf cmbCategory.SelectedIndex = 8 Then ' Special case from your original code (Source maps to column 9)
-                If TableDataGridView.Columns.Count > 9 Then
-                    TableDataGridView.Columns(9).DefaultCellStyle.BackColor = Color.FromArgb(81, 187, 255)
-                End If
-            End If
-        End If
-
-        ' Populate cmbtxtSearch with distinct values based on selected category
-        cmbtxtSearch.Items.Clear()
-        Dim sqlQuery As String = ""
-        Select Case cmbCategory.SelectedIndex
-            Case 0 : sqlQuery = "SELECT DISTINCT Continent FROM [Table]"
-            Case 1 : sqlQuery = "SELECT DISTINCT Country FROM [Table]"
-            Case 2 : sqlQuery = "SELECT DISTINCT Catalogue_Code FROM [Table]"
-            Case 3 : sqlQuery = "SELECT DISTINCT Currency_Name FROM [Table]"
-            Case 4 : sqlQuery = "SELECT DISTINCT Denomination FROM [Table]"
-            Case 5 : sqlQuery = "SELECT DISTINCT Date_Recorded_On FROM [Table]"
-            Case 6 : sqlQuery = "SELECT DISTINCT Serial_No FROM [Table]"
-            Case 7 : sqlQuery = "SELECT DISTINCT Condition FROM [Table]"
-            Case 8 : sqlQuery = "SELECT DISTINCT Source FROM [Table]"
-            Case Else : Return ' No category selected or invalid index
-        End Select
-
-        Try
-            Using conn As New OleDbConnection(ConnectionString)
-                Using cmd As New OleDbCommand(sqlQuery, conn)
-                    conn.Open()
-                    Using myreader As OleDbDataReader = cmd.ExecuteReader
-                        While myreader.Read
-                            cmbtxtSearch.Items.Add(myreader(0).ToString()) ' Add the first column's value
-                        End While
-                    End Using
-                End Using
-            End Using
-        Catch ex As OleDbException
-            MessageBox.Show($"Database error fetching distinct values for search: {ex.Message}", "Search Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Console.WriteLine($"OleDbException (Distinct Values): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-        Catch ex As Exception
-            MessageBox.Show($"An unexpected error occurred fetching distinct values: {ex.Message}", "Search Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Console.WriteLine($"Exception (Distinct Values): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-        End Try
-    End Sub
-
-
-
-    Private Sub cmbtxtSearch_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbtxtSearch.SelectedIndexChanged
-        filterPerfect() ' Apply perfect match filter when an item is selected from dropdown
-    End Sub
-
-    Private Sub cmbtxtSearch_TextChanged(sender As Object, e As EventArgs) Handles cmbtxtSearch.TextChanged
-        filter() ' Apply filter as text changes (partial match)
-    End Sub
-
-
-    Private Sub filter()
-        Dim filterColumn As String = ""
-        Dim filterValue As String = cmbtxtSearch.Text.Replace("'", "''") ' Escape single quotes for SQL
-
-        Select Case cmbCategory.SelectedIndex
-            Case 0 : filterColumn = "Continent"
-            Case 1 : filterColumn = "Country"
-            Case 2 : filterColumn = "Catalogue_Code"
-            Case 3 : filterColumn = "Currency_Name"
-                filterValue = filterValue.ToUpper() ' Convert to uppercase for currency name
-            Case 4 : filterColumn = "Denomination"
-            Case 5 : filterColumn = "Date_Recorded_On"
-            Case 6 : filterColumn = "Serial_No"
-            Case 7 : filterColumn = "Condition"
-            Case 8 : filterColumn = "Source"
-            Case Else : TableBindingSource.Filter = Nothing : Return
-        End Select
-
-        Try
-            ' Apply a "Like" filter for partial matches
-            ' Use # for date fields in Access SQL if Date_Recorded_On is Date/Time type
-            If filterColumn = "Date_Recorded_On" Then
-                ' Assuming date format is dd/MM/yyyy in the database
-                TableBindingSource.Filter = $"FORMAT({filterColumn}, 'dd/mm/yyyy') LIKE '%{filterValue}%'"
-            Else
-                TableBindingSource.Filter = $"{filterColumn} LIKE '%{filterValue}%'"
-            End If
-        Catch ex As Exception
-            MessageBox.Show($"Error applying filter: {ex.Message}", "Filter Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Console.WriteLine($"Filter Error: {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-        End Try
-    End Sub
-
-    Private Sub filterPerfect()
-        Dim filterColumn As String = ""
-        Dim filterValue As String = cmbtxtSearch.Text.Replace("'", "''") ' Escape single quotes for SQL
-
-        Select Case cmbCategory.SelectedIndex
-            Case 0 : filterColumn = "Continent"
-            Case 1 : filterColumn = "Country"
-            Case 2 : filterColumn = "Catalogue_Code"
-            Case 3 : filterColumn = "Currency_Name"
-                filterValue = filterValue.ToUpper()
-            Case 4 : filterColumn = "Denomination"
-            Case 5 : filterColumn = "Date_Recorded_On"
-            Case 6 : filterColumn = "Serial_No"
-            Case 7 : filterColumn = "Condition"
-            Case 8 : filterColumn = "Source"
-            Case Else : TableBindingSource.Filter = Nothing : Return
-        End Select
-
-        Try
-            ' Apply an exact match filter
-            If filterColumn = "Date_Recorded_On" Then
-                ' For exact date match, ensure format consistency
-                TableBindingSource.Filter = $"FORMAT({filterColumn}, 'dd/mm/yyyy') = '{filterValue}'"
-            Else
-                TableBindingSource.Filter = $"{filterColumn} = '{filterValue}'"
-            End If
-        Catch ex As Exception
-            MessageBox.Show($"Error applying perfect filter: {ex.Message}", "Filter Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Console.WriteLine($"Perfect Filter Error: {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-        End Try
-    End Sub
-
-    ' --- Other Helper Methods (kept for context, but not directly database CRUD) ---
-    Private Sub CheckEnteries()
-        ' Enable/disable save button based on required fields
-        If String.IsNullOrWhiteSpace(ContinentComboBox.Text) OrElse
-           String.IsNullOrWhiteSpace(CountryComboBox.Text) OrElse
-           String.IsNullOrWhiteSpace(Currency_NameComboBox.Text) OrElse
-           String.IsNullOrWhiteSpace(DenominationComboBox.Text) OrElse
-           String.IsNullOrWhiteSpace(Date_Recorded_OnTextBox.Text) Then
-            TableBindingNavigatorSaveItem.Enabled = False
-        Else
-            TableBindingNavigatorSaveItem.Enabled = True
-        End If
-    End Sub
-
-    ' --- Currency Denomination Auto-Population (kept as it's part of data entry flow) ---
-    Private Sub Currency_NameComboBox_TextChanged(sender As Object, e As EventArgs) Handles Currency_NameComboBox.TextChanged
-        CheckEnteries() ' Re-check entries when currency name changes
-
-        DenominationComboBox.Text = Nothing
-        DenominationComboBox.Items.Clear()
-
-        Select Case Currency_NameComboBox.Text.ToUpper() ' Use ToUpper for case-insensitive comparison
-            Case "AUD" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50", "100"})
-            Case "GBP" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50"})
-            Case "EUR" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50", "100", "200", "500"})
-            Case "JPY" : DenominationComboBox.Items.AddRange({"1,000", "2,000", "5,000", "10,000"})
-            Case "CHF" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "200", "1,000"})
-            Case "USD" : DenominationComboBox.Items.AddRange({"1", "2", "5", "10", "20", "50", "100", "1,000", "5,000", "10,000", "100,000"})
-            Case "AFN" : DenominationComboBox.Items.AddRange({"1", "2", "5", "10", "20", "50", "100", "500", "1,000"})
-            Case "ALL" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "500", "1,000", "2,000", "5,000"})
-            Case "DZD" : DenominationComboBox.Items.AddRange({"1", "2", "5", "10", "20", "50", "100", "200", "500", "1,000"})
-            Case "AOA" : DenominationComboBox.Items.AddRange({"10", "50", "100", "200", "500", "1,000", "2,000"})
-            Case "ARS" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "200", "500", "1,000"})
-            Case "AMD" : DenominationComboBox.Items.AddRange({"10", "25", "50", "100", "200", "500", "1,000", "2,000", "5,000", "20,000", "50,000"})
-            Case "AWG" : DenominationComboBox.Items.AddRange({"10", "25", "50", "100", "200"})
-            Case "ATS" : DenominationComboBox.Items.AddRange({"20", "50", "100", "500", "1,000", "5,000"})
-            Case "BEF" : DenominationComboBox.Items.AddRange({"100", "200", "500", "1,000", "2,000"})
-            Case "AZN" : DenominationComboBox.Items.AddRange({"1", "5", "10", "20", "50", "100"})
-            Case "BSD" : DenominationComboBox.Items.AddRange({"1/2", "1", "3", "5", "10", "20", "50", "100"})
-            Case "BHD" : DenominationComboBox.Items.AddRange({"10", "25", "50", "100", "500"})
-            Case "BDT" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50", "100", "500", "1,000"})
-            Case "BBD" : DenominationComboBox.Items.AddRange({"2", "5", "10", "20", "50", "100"})
-            Case "BYR" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50", "100", "200", "500"})
-            Case "BZD" : DenominationComboBox.Items.AddRange({"1", "2", "5", "10", "20", "25", "50", "100"})
-            Case "BMD" : DenominationComboBox.Items.AddRange({"2", "5", "10", "20", "50", "100"})
-            Case "BTN" : DenominationComboBox.Items.AddRange({"1", "5", "10", "20", "50", "100", "500"})
-            Case "BOB" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50", "100", "200"})
-            Case "BAM" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "200"})
-            Case "BWP" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "200"})
-            Case "BRL" : DenominationComboBox.Items.AddRange({"2", "5", "10", "20", "50", "100"})
-            Case "BND" : DenominationComboBox.Items.AddRange({"1", "5", "10", "20", "25", "50", "100", "500", "1,000", "10,000"})
-            Case "BGN" : DenominationComboBox.Items.AddRange({"1", "2", "5", "10", "20", "50"})
-            Case "BIF" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "500", "1,000", "5,000"})
-            Case "XOF" : DenominationComboBox.Items.AddRange({"500", "1,000", "2,000", "5,000", "10,000"})
-            Case "XAF" : DenominationComboBox.Items.AddRange({"500", "1,000", "2,000", "5,000", "10,000"})
-            Case "XPF" : DenominationComboBox.Items.AddRange({"500", "1,000", "5,000", "10,000"})
-            Case "KHR" : DenominationComboBox.Items.AddRange({"50", "100", "500", "1,000", "2,000", "5,000", "10,000", "20,000", "50,000", "100,000"})
-            Case "CAD" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50", "100"})
-            Case "CVE" : DenominationComboBox.Items.AddRange({"200", "500", "1,000", "2,000", "2,500", "5,000"})
-            Case "KYD" : DenominationComboBox.Items.AddRange({"1", "5", "10", "25", "40", "50", "100"})
-            Case "CLP" : DenominationComboBox.Items.AddRange({"1", "5", "10", "50", "100", "500", "1,000", "2,000", "5,000", "10,000", "20,000"})
-            Case "CNY" : DenominationComboBox.Items.AddRange({"1", "2", "5", "10", "20", "50", "100"})
-            Case "COP" : DenominationComboBox.Items.AddRange({"1,000", "2,000", "5,000", "10,000", "20,000", "50,000", "100,000"})
-            Case "KMF" : DenominationComboBox.Items.AddRange({"500", "1,000", "2,000", "2,500", "5,000", "10,000"})
-            Case "CDF" : DenominationComboBox.Items.AddRange({"1", "2", "5", "10", "20", "50", "100", "200", "500", "1,000", "2,000", "5,000", "10,000", "20,000"})
-            Case "CRC" : DenominationComboBox.Items.AddRange({"1,000", "2,000", "5,000", "10,000", "20,000", "50,000"})
-            Case "HRK" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50", "100", "200", "500", "1,000"})
-            Case "CUC" : DenominationComboBox.Items.AddRange({"1", "3", "5", "10", "20", "50", "100"})
-            Case "CUP" : DenominationComboBox.Items.AddRange({"1", "3", "5", "10", "20", "50", "100", "200", "500", "1,000"})
-            Case "CYP" : DenominationComboBox.Items.AddRange({"1", "2", "5", "10", "20"})
-            Case "CZK" : DenominationComboBox.Items.AddRange({"100", "200", "500", "2,000", "5,000"})
-            Case "DKK" : DenominationComboBox.Items.AddRange({"50", "100", "200", "500", "1,000"})
-            Case "DJF" : DenominationComboBox.Items.AddRange({"1", "2", "5", "10", "20", "50", "100", "500", "1,000", "2,000", "5,000", "10,000"})
-            Case "DOP" : DenominationComboBox.Items.AddRange({"20", "50", "100", "200", "500", "1,000", "2,000"})
-            Case "XCD" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50", "100"})
-            Case "EGP" : DenominationComboBox.Items.AddRange({"1", "5", "10", "20", "50", "100", "200"})
-            Case "SVC" : DenominationComboBox.Items.AddRange({"1", "5", "10", "25", "100"})
-            Case "EEK" : DenominationComboBox.Items.AddRange({"1", "2", "5", "10", "25", "100", "500"})
-            Case "ETB" : DenominationComboBox.Items.AddRange({"1", "5", "10", "50", "100"})
-            Case "FKP" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50"})
-            Case "FIM" : DenominationComboBox.Items.AddRange({"1", "5", "100", "500", "1,000", "5,000"})
-            Case "FJD" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50", "100"})
-            Case "GMD" : DenominationComboBox.Items.AddRange({"5", "10", "20", "25", "50", "100", "200"})
-            Case "GEL" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50", "100"})
-            Case "DMK" : DenominationComboBox.Items.AddRange({"1/2", "1", "2", "5", "10", "20", "50", "100"})
-            Case "GHS" : DenominationComboBox.Items.AddRange({"1", "2", "5", "10", "20", "50", "100", "200"})
-            Case "GIP" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50", "100"})
-            Case "GRD" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50", "100", "200", "5,000"})
-            Case "GTQ" : DenominationComboBox.Items.AddRange({"1", "5", "10", "20", "50", "100", "200"})
-            Case "GNF" : DenominationComboBox.Items.AddRange({"50", "100", "500", "1,000", "5,000", "10,000"})
-            Case "GYD" : DenominationComboBox.Items.AddRange({"1", "5", "10", "20", "25", "50", "100", "500", "1,000"})
-            Case "HTG" : DenominationComboBox.Items.AddRange({"10", "20", "25", "50", "100", "250", "500", "1,000"})
-            Case "HNL" : DenominationComboBox.Items.AddRange({"1", "2", "5", "10", "20", "50", "100", "500"})
-            Case "HKD" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "500", "1,000"})
-            Case "HUF" : DenominationComboBox.Items.AddRange({"500", "1,000", "2,000", "5,000", "10,000", "20,000"})
-            Case "ISK" : DenominationComboBox.Items.AddRange({"500", "1,000", "2,000", "5,000", "10,000"})
-            Case "INR" : DenominationComboBox.Items.AddRange({"1", "2", "5", "10", "20", "50", "100", "200", "500", "1,000", "2,000"})
-            Case "IDR" : DenominationComboBox.Items.AddRange({"2,000", "5,000", "10,000", "20,000", "50,000", "100,000"})
-            Case "IRR" : DenominationComboBox.Items.AddRange({"100", "200", "500", "1,000", "2,000", "100,000"})
-            Case "IQD" : DenominationComboBox.Items.AddRange({"50", "250", "1,000", "5,000", "10,000", "25,000"})
-            Case "IED" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50", "100"})
-            Case "ILS" : DenominationComboBox.Items.AddRange({"20", "50", "100", "200"})
-            Case "ITL" : DenominationComboBox.Items.AddRange({"1", "2", "5", "10", "20", "50", "100", "200", "500", "1,000"})
-            Case "JMD" : DenominationComboBox.Items.AddRange({"50", "100", "200", "500", "1,000", "5,000"})
-            Case "JOD" : DenominationComboBox.Items.AddRange({"1", "5", "10", "20", "50"})
-            Case "KZT" : DenominationComboBox.Items.AddRange({"200", "500", "1,000", "2,000", "5,000", "10,000", "20,000"})
-            Case "KES" : DenominationComboBox.Items.AddRange({"50", "100", "200", "500", "1,000"})
-            Case "KWD" : DenominationComboBox.Items.AddRange({"1/4", "1/2", "1", "5", "10", "20"})
-            Case "KGS" : DenominationComboBox.Items.AddRange({"20", "50", "100", "200", "500", "1,000", "5,000"})
-            Case "LAK" : DenominationComboBox.Items.AddRange({"500", "1,000", "2,000", "5,000", "10,000", "20,000", "50,000"})
-            Case "LVL" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50", "100", "500"})
-            Case "LBP" : DenominationComboBox.Items.AddRange({"1", "5", "10", "25", "50", "100", "200", "500", "1,000", "5,000", "10,000", "20,000", "50,000", "100,000"})
-            Case "LSL" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "200"})
-            Case "LRD" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50", "100"})
-            Case "LYD" : DenominationComboBox.Items.AddRange({"1/4", "1/2", "1", "5", "10", "20"})
-            Case "LTL" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "200", "500"})
-            Case "LUF" : DenominationComboBox.Items.AddRange({"1", "2", "5", "25", "125"})
-            Case "MOP" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "500", "1,000"})
-            Case "MKD" : DenominationComboBox.Items.AddRange({"10", "50", "100", "200", "500", "1,000"})
-            Case "MGA" : DenominationComboBox.Items.AddRange({"100", "200", "500", "1,000", "2,000", "5,000", "10,000", "20,000"})
-            Case "MWK" : DenominationComboBox.Items.AddRange({"20", "50", "100", "200", "500", "1,000", "2,000"})
-            Case "MYR" : DenominationComboBox.Items.AddRange({"1", "5", "10", "20", "50", "100"})
-            Case "MVR" : DenominationComboBox.Items.AddRange({"1", "2", "5", "10", "25", "50", "100", "200", "500"})
-            Case "MTL" : DenominationComboBox.Items.AddRange({"2", "5", "10", "20"})
-            Case "MRO" : DenominationComboBox.Items.AddRange({"50", "100", "200", "500", "1,000"})
-            Case "MUR" : DenominationComboBox.Items.AddRange({"0.05", "0.2", "0.5", "1", "5", "10", "20", "25", "50", "100", "200", "500", "1,000", "2,000"})
-            Case "MXN" : DenominationComboBox.Items.AddRange({"20", "50", "100", "200", "500"})
-            Case "MDL" : DenominationComboBox.Items.AddRange({"1", "5", "10", "20", "50", "100", "200", "500", "1,000"})
-            Case "MNT" : DenominationComboBox.Items.AddRange({"1", "3", "5", "10", "20", "50", "100", "500", "1,000", "5,000", "10,000"})
-            Case "MAD" : DenominationComboBox.Items.AddRange({"20", "25", "50", "100", "200"})
-            Case "MZN" : DenominationComboBox.Items.AddRange({"50", "100", "500", "1,000"})
-            Case "MMK" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50", "100", "200", "500", "5,000", "10,000"})
-            Case "ANG" : DenominationComboBox.Items.AddRange({"1", "2 1/2", "5", "10", "25", "50", "100", "250", "500"})
-            Case "NAD" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "200"})
-            Case "NPR" : DenominationComboBox.Items.AddRange({"1", "2", "5", "10", "20", "50", "100", "500", "1,000"})
-            Case "NLG" : DenominationComboBox.Items.AddRange({"5", "10", "25", "50", "100"})
-            Case "NZD" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50", "100"})
-            Case "NIO" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "200", "500"})
-            Case "NGN" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "200", "500", "1,000"})
-            Case "KPW" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50", "100", "200", "500", "1,000", "2,000", "5,000"})
-            Case "NOK" : DenominationComboBox.Items.AddRange({"50", "100", "200", "500", "1,000"})
-            Case "OMR" : DenominationComboBox.Items.AddRange({"1/2", "1", "5", "10", "20", "50", "100", "200"})
-            Case "PKR" : DenominationComboBox.Items.AddRange({"1", "2", "5", "10", "20", "50", "100", "500", "1,000", "5,000"})
-            Case "PAB" : DenominationComboBox.Items.AddRange({"1", "5", "10", "20"})
-            Case "PGK" : DenominationComboBox.Items.AddRange({"2", "5", "10", "20", "50"})
-            Case "PYG" : DenominationComboBox.Items.AddRange({"2,000", "5,000", "10,000", "20,000", "50,000", "100,000"})
-            Case "PEN" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "200"})
-            Case "PHP" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "200", "500", "1,000"})
-            Case "PLN" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "200"})
-            Case "PTE" : DenominationComboBox.Items.AddRange({"1", "5", "10", "20", "50", "100", "200", "500", "1,000", "2,000", "5,000", "10,000"})
-            Case "QAR" : DenominationComboBox.Items.AddRange({"1", "5", "10", "50", "100", "500"})
-            Case "RON" : DenominationComboBox.Items.AddRange({"1", "5", "10", "50", "100", "200", "500"})
-            Case "RUB" : DenominationComboBox.Items.AddRange({"5", "10", "50", "100", "500", "1,000", "5,000"})
-            Case "RWF" : DenominationComboBox.Items.AddRange({"500", "1,000", "2,000", "5,000"})
-            Case "WST" : DenominationComboBox.Items.AddRange({"2", "5", "10", "20", "50", "100"})
-            Case "STD" : DenominationComboBox.Items.AddRange({"100", "250", "500", "1,000", "2,000", "5,000", "10,000", "20,000", "50,000", "100,000"})
-            Case "SAR" : DenominationComboBox.Items.AddRange({"1", "5", "10", "50", "100", "500"})
-            Case "RSD" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "200", "500", "1,000", "2,000", "5,000"})
-            Case "SCR" : DenominationComboBox.Items.AddRange({"25", "50", "100", "500"})
-            Case "SLL" : DenominationComboBox.Items.AddRange({"1,000", "2,000", "5,000", "10,000"})
-            Case "SGD" : DenominationComboBox.Items.AddRange({"2", "5", "10", "50", "100", "500", "1,000", "10,000"})
-            Case "SKK" : DenominationComboBox.Items.AddRange({"20", "50", "100", "200", "500", "1,000", "5,000"})
-            Case "SIT" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "200", "500", "1,000", "5,000", "10,000"})
-            Case "SBD" : DenominationComboBox.Items.AddRange({"5", "10", "20", "40", "50", "100"})
-            Case "SOS" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50", "100", "500", "1,000"})
-            Case "ZAR" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "200"})
-            Case "KRW" : DenominationComboBox.Items.AddRange({"1,000", "5,000", "10,000"})
-            Case "ESP" : DenominationComboBox.Items.AddRange({"1", "5", "25", "50", "100", "200", "500", "1,000", "2,000", "5,000"})
-            Case "LKR" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "200", "500", "1,000", "2,000", "5,000"})
-            Case "SHP" : DenominationComboBox.Items.AddRange({"1", "5", "10", "20", "40", "50", "100"})
-            Case "SDG" : DenominationComboBox.Items.AddRange({"1", "2", "5", "10", "20", "50"})
-            Case "SRD" : DenominationComboBox.Items.AddRange({"5", "10", "25", "100", "1,000"})
-            Case "SZL" : DenominationComboBox.Items.AddRange({"10", "20", "50", "100", "200"})
-            Case "SEK" : DenominationComboBox.Items.AddRange({"20", "50", "100", "500"})
-            Case "SYP" : DenominationComboBox.Items.AddRange({"50", "100", "200", "500", "1,000", "2,000"})
-            Case "TWD" : DenominationComboBox.Items.AddRange({"100", "200", "500", "1,000", "2,000"})
-            Case "TZS" : DenominationComboBox.Items.AddRange({"500", "1,000", "2,000", "5,000", "10,000"})
-            Case "THB" : DenominationComboBox.Items.AddRange({"20", "50", "100", "500", "1,000"})
-            Case "TOP" : DenominationComboBox.Items.AddRange({"1", "2", "5", "10", "20", "50"})
-            Case "TTD" : DenominationComboBox.Items.AddRange({"1", "5", "10", "20", "50", "100"})
-            Case "TND" : DenominationComboBox.Items.AddRange({"5", "10", "20", "30", "50"})
-            Case "TRY" : DenominationComboBox.Items.AddRange({"1", "5", "10", "20", "50", "100", "200"})
-            Case "TMM" : DenominationComboBox.Items.AddRange({"1", "5", "10", "20", "50", "100", "500"})
-            Case "UGX" : DenominationComboBox.Items.AddRange({"1,000", "2,000", "5,000", "10,000", "20,000", "50,000"})
-            Case "UAH" : DenominationComboBox.Items.AddRange({"1", "2", "5", "10", "20", "50", "100", "200", "500", "1,000"})
-            Case "UYU" : DenominationComboBox.Items.AddRange({"20", "50", "100", "200", "500", "1,000", "2,000"})
-            Case "AED" : DenominationComboBox.Items.AddRange({"5", "10", "20", "50", "100", "200", "500", "1,000"})
-            Case "VUV" : DenominationComboBox.Items.AddRange({"100", "200", "500", "1,000", "2,000", "5,000", "10,000"})
-            Case "VEB" : DenominationComboBox.Items.AddRange({"2,000", "5,000", "10,000", "20,000", "50,000"})
-            Case "VND" : DenominationComboBox.Items.AddRange({"500", "1,000", "2,000", "5,000", "10,000", "20,000", "50,000", "200,000", "500,000"})
-            Case "YER" : DenominationComboBox.Items.AddRange({"50", "100", "200", "250", "500", "1,000"})
-            Case "ZMK" : DenominationComboBox.Items.AddRange({"50", "100", "500", "1,000", "5,000", "10,000", "20,000", "50,000"})
-            Case "ZWD" : DenominationComboBox.Items.AddRange({"1", "5", "10", "50", "100", "500", "1,000", "1,000,000,000,000"})
-            Case Else
-                ' No specific denominations, leave empty
-        End Select
-    End Sub
-
-
 
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
         Date_Recorded_OnTextBox.Text = DateTime.Now.ToString("dd/MM/yyyy")
@@ -543,77 +83,6 @@ Public Class frmNotes
 
     Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
         SourceTextBox.Text = ("(none)")
-    End Sub
-
-    Private Sub TableDataGridView_CellEnter(sender As Object, e As DataGridViewCellEventArgs) Handles TableDataGridView.CellEnter
-        ' This event populates image picture boxes based on selected row.
-        If e.RowIndex >= 0 Then ' Ensure a valid row is clicked
-            Frontal_ImagePictureBox.Image = Nothing
-            Backward_ImagePictureBox.Image = Nothing
-
-            If Not String.IsNullOrWhiteSpace(Frontal_ImageTextBox.Text) Then
-                Dim frontalImagePath As String = Path.Combine(FullImagePath, Frontal_ImageTextBox.Text)
-                If File.Exists(frontalImagePath) Then
-                    Frontal_ImagePictureBox.ImageLocation = frontalImagePath
-                Else
-                    ' Handle case where image file is missing
-                    Frontal_ImagePictureBox.Image = My.Resources.None_Image ' Assuming None_Image exists
-                End If
-            Else
-                Frontal_ImagePictureBox.Image = My.Resources.None_Image ' Assuming None_Image exists
-            End If
-
-            If Not String.IsNullOrWhiteSpace(Backward_ImageTextBox.Text) Then
-                Dim backwardImagePath As String = Path.Combine(FullImagePath, Backward_ImageTextBox.Text)
-                If File.Exists(backwardImagePath) Then
-                    Backward_ImagePictureBox.ImageLocation = backwardImagePath
-                Else
-                    ' Handle case where image file is missing
-                    Backward_ImagePictureBox.Image = My.Resources.None_Image ' Assuming None_Image exists
-                End If
-            Else
-                Backward_ImagePictureBox.Image = My.Resources.None_Image ' Assuming None_Image exists
-            End If
-        End If
-    End Sub
-
-    Private Sub Button12_Click(sender As Object, e As EventArgs) Handles Button12.Click
-        RefreshDatabase()
-    End Sub
-
-    Private Sub frmNotes_KeyDown(sender As Object, e As KeyEventArgs) Handles MyBase.KeyDown
-        If e.Control AndAlso e.KeyCode = Keys.S Then
-            MessageBox.Show("Ctrl+S pressed!", "Keyboard Shortcut", MessageBoxButtons.OK, MessageBoxIcon.Information)
-            ' Optionally call save method: TableBindingNavigatorSaveItem_Click(TableBindingNavigatorSaveItem, EventArgs.Empty)
-        End If
-    End Sub
-
-    Private Sub Button8_Click(sender As Object, e As EventArgs) Handles Button8.Click
-        If My.Computer.Network.IsAvailable Then
-            Dim amount As String = DenominationComboBox.Text.Replace(",", "")
-            Dim fromCurrency As String = Currency_NameComboBox.Text
-            Dim toCurrency As String = My.Settings.ToCurrency ' Assuming My.Settings.ToCurrency is defined
-
-            If Not String.IsNullOrWhiteSpace(amount) AndAlso Not String.IsNullOrWhiteSpace(fromCurrency) AndAlso Not String.IsNullOrWhiteSpace(toCurrency) Then
-                System.Diagnostics.Process.Start($"https://www.xe.com/currencyconverter/convert/?Amount={amount}&From={fromCurrency}&To={toCurrency}")
-            Else
-                MessageBox.Show("Please ensure Denomination, Currency Name, and Target Currency are selected.", "Missing Information", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            End If
-        Else
-            MessageBox.Show("Network is not available. Please try again later.", "Network Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
-        End If
-    End Sub
-
-    Private Sub Button10_Click(sender As Object, e As EventArgs) Handles Button10.Click
-        If My.Settings.ScannerDrive Is Nothing OrElse String.IsNullOrWhiteSpace(My.Settings.ScannerDrive) Then
-            MessageBox.Show("There is no driver file selected. Please select it from settings option.", "Scanner Driver Missing", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
-        Else
-            If File.Exists(My.Settings.ScannerDrive) Then
-                System.Diagnostics.Process.Start(My.Settings.ScannerDrive)
-            Else
-                MessageBox.Show("Scanner driver file not found at the specified path: " & My.Settings.ScannerDrive, "File Not Found", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            End If
-        End If
     End Sub
 
     Private Sub TableBindingNavigator_RefreshItems(sender As Object, e As EventArgs) Handles TableBindingNavigator.RefreshItems
@@ -790,7 +259,16 @@ Public Class frmNotes
         System.Windows.Forms.Application.Exit()
     End Sub
 
+    Private Sub BindingNavigatorAddNewItem_Click(sender As Object, e As EventArgs) Handles BindingNavigatorAddNewItem.Click
+        ActiveControl = ContinentComboBox
 
+        If SourceTextBox.Text = Nothing Then
+            SourceTextBox.Text = ("(none)")
+        End If
+
+        Frontal_ImagePictureBox.Image = Nothing
+        Backward_ImagePictureBox.Image = Nothing
+    End Sub
 
     Private Sub PictureBox1_DoubleClick(sender As Object, e As EventArgs) Handles Frontal_ImagePictureBox.DoubleClick
         Try
@@ -854,6 +332,108 @@ Public Class frmNotes
 
     End Sub
 
+    Private Sub cmbCategory_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbCategory.SelectedIndexChanged
+        If cmbCategory.SelectedIndex = 5 Then
+            cmbtxtSearch.Enabled = False
+            dtpSearch.Visible = True
+        Else
+            cmbtxtSearch.Enabled = True
+            dtpSearch.Visible = False
+        End If
+        Me.cmbtxtSearch.Text = Nothing
+        TableBindingSource.Filter = Nothing
+
+        TableDataGridView.Columns(0).DefaultCellStyle.BackColor = Color.YellowGreen
+        TableDataGridView.Columns(1).DefaultCellStyle.BackColor = Color.YellowGreen
+        TableDataGridView.Columns(2).DefaultCellStyle.BackColor = Color.YellowGreen
+        TableDataGridView.Columns(3).DefaultCellStyle.BackColor = Color.YellowGreen
+        TableDataGridView.Columns(4).DefaultCellStyle.BackColor = Color.YellowGreen
+        TableDataGridView.Columns(5).DefaultCellStyle.BackColor = Color.YellowGreen
+        TableDataGridView.Columns(6).DefaultCellStyle.BackColor = Color.YellowGreen
+        TableDataGridView.Columns(7).DefaultCellStyle.BackColor = Color.YellowGreen
+        TableDataGridView.Columns(8).DefaultCellStyle.BackColor = Color.YellowGreen
+        TableDataGridView.Columns(9).DefaultCellStyle.BackColor = Color.YellowGreen
+
+        If cmbCategory.SelectedIndex >= 0 Then
+            If cmbCategory.SelectedIndex < 8 Then
+                TableDataGridView.Columns(cmbCategory.SelectedIndex).DefaultCellStyle.BackColor = Color.FromArgb(81, 187, 255)
+            ElseIf cmbCategory.SelectedIndex = 8 Then
+                TableDataGridView.Columns(9).DefaultCellStyle.BackColor = Color.FromArgb(81, 187, 255)
+            Else
+            End If
+        End If
+
+        conn.Open()
+
+        If cmbCategory.SelectedIndex = 0 Then
+            Dim strsql As New OleDbCommand("SELECT DISTINCT Continent FROM [Table]", conn)
+            Dim myreader As OleDb.OleDbDataReader = strsql.ExecuteReader
+            cmbtxtSearch.Items.Clear()
+            While myreader.Read
+                cmbtxtSearch.Items.Add(myreader("Continent"))
+            End While
+        ElseIf cmbCategory.SelectedIndex = 1 Then
+            Dim strsql As New OleDbCommand("SELECT DISTINCT Country FROM [Table]", conn)
+            Dim myreader As OleDb.OleDbDataReader = strsql.ExecuteReader
+            cmbtxtSearch.Items.Clear()
+            While myreader.Read
+                cmbtxtSearch.Items.Add(myreader("Country"))
+            End While
+        ElseIf cmbCategory.SelectedIndex = 2 Then
+            Dim strsql As New OleDbCommand("SELECT DISTINCT Catalogue_Code FROM [Table]", conn)
+            Dim myreader As OleDb.OleDbDataReader = strsql.ExecuteReader
+            cmbtxtSearch.Items.Clear()
+            While myreader.Read
+                cmbtxtSearch.Items.Add(myreader("Catalogue_Code"))
+            End While
+        ElseIf cmbCategory.SelectedIndex = 3 Then
+            Dim strsql As New OleDbCommand("SELECT DISTINCT Currency_Name FROM [Table]", conn)
+            Dim myreader As OleDb.OleDbDataReader = strsql.ExecuteReader
+            cmbtxtSearch.Items.Clear()
+            While myreader.Read
+                cmbtxtSearch.Items.Add(myreader("Currency_Name"))
+            End While
+        ElseIf cmbCategory.SelectedIndex = 4 Then
+            Dim strsql As New OleDbCommand("SELECT DISTINCT Denomination FROM [Table]", conn)
+            Dim myreader As OleDb.OleDbDataReader = strsql.ExecuteReader
+            cmbtxtSearch.Items.Clear()
+            While myreader.Read
+                cmbtxtSearch.Items.Add(myreader("Denomination"))
+            End While
+        ElseIf cmbCategory.SelectedIndex = 5 Then
+            Dim strsql As New OleDbCommand("SELECT DISTINCT Date_Recorded_On FROM [Table]", conn)
+            Dim myreader As OleDb.OleDbDataReader = strsql.ExecuteReader
+            cmbtxtSearch.Items.Clear()
+            While myreader.Read
+                cmbtxtSearch.Items.Add(myreader("Date_Recorded_On"))
+            End While
+        ElseIf cmbCategory.SelectedIndex = 6 Then
+            Dim strsql As New OleDbCommand("SELECT DISTINCT Serial_No FROM [Table]", conn)
+            Dim myreader As OleDb.OleDbDataReader = strsql.ExecuteReader
+            cmbtxtSearch.Items.Clear()
+            While myreader.Read
+                cmbtxtSearch.Items.Add(myreader("Serial_No"))
+            End While
+        ElseIf cmbCategory.SelectedIndex = 7 Then
+            Dim strsql As New OleDbCommand("SELECT DISTINCT Condition FROM [Table]", conn)
+            Dim myreader As OleDb.OleDbDataReader = strsql.ExecuteReader
+            cmbtxtSearch.Items.Clear()
+            While myreader.Read
+                cmbtxtSearch.Items.Add(myreader("Condition"))
+            End While
+        ElseIf cmbCategory.SelectedIndex = 8 Then
+            Dim strsql As New OleDbCommand("SELECT DISTINCT Source FROM [Table]", conn)
+            Dim myreader As OleDb.OleDbDataReader = strsql.ExecuteReader
+            cmbtxtSearch.Items.Clear()
+            While myreader.Read
+                cmbtxtSearch.Items.Add(myreader("Source"))
+            End While
+        Else
+            cmbtxtSearch.Items.Clear()
+        End If
+
+        conn.Close()
+    End Sub
 
     Private Sub dtpSearch_ValueChanged(sender As Object, e As EventArgs) Handles dtpSearch.ValueChanged
 
@@ -868,6 +448,58 @@ Public Class frmNotes
     Private Sub txtSearch_TextChanged(sender As Object, e As EventArgs)
         filter()
     End Sub
+    Private Sub filter()
+        Dim cantfind As String = cmbtxtSearch.Text
+
+        Try
+
+            If cmbCategory.SelectedIndex = 0 Then
+
+                TableBindingSource.Filter = "Continent Like'%" & Me.cmbtxtSearch.Text & "%'"
+
+            ElseIf cmbCategory.SelectedIndex = 1 Then
+
+                TableBindingSource.Filter = "Country Like'%" & Me.cmbtxtSearch.Text & "%'"
+
+            ElseIf cmbCategory.SelectedIndex = 2 Then
+
+                TableBindingSource.Filter = "Catalogue_Code Like'%" & Me.cmbtxtSearch.Text & "%'"
+
+            ElseIf cmbCategory.SelectedIndex = 3 Then
+                Dim text As String
+
+                text = UCase(cmbtxtSearch.Text)
+
+                TableBindingSource.Filter = "Currency_Name Like'%" & text & "%'"
+
+            ElseIf cmbCategory.SelectedIndex = 4 Then
+
+                TableBindingSource.Filter = "Denomination Like'%" & Me.cmbtxtSearch.Text & "%'"
+
+            ElseIf cmbCategory.SelectedIndex = 5 Then
+
+                TableBindingSource.Filter = "Date_Recorded_On Like'%" & Me.cmbtxtSearch.Text & "%'"
+
+            ElseIf cmbCategory.SelectedIndex = 6 Then
+
+                TableBindingSource.Filter = "Serial_No Like'%" & Me.cmbtxtSearch.Text & "%'"
+
+            ElseIf cmbCategory.SelectedIndex = 7 Then
+
+                TableBindingSource.Filter = "Condition Like'%" & Me.cmbtxtSearch.Text & "%'"
+
+
+            ElseIf cmbCategory.SelectedIndex = 8 Then
+
+                TableBindingSource.Filter = "Source Like'%" & Me.cmbtxtSearch.Text & "%'"
+
+            Else
+            End If
+
+        Catch ex As Exception
+
+        End Try
+    End Sub
     Private Sub RemoveImage()
         Frontal_ImagePictureBox.Image = Nothing
         Backward_ImagePictureBox.Image = Nothing
@@ -875,30 +507,98 @@ Public Class frmNotes
         Backward_ImageTextBox.Text = Nothing
     End Sub
 
-
-
+    Private Sub Button8_Click(sender As Object, e As EventArgs) Handles Button8.Click
+        If My.Computer.Network.IsAvailable Then
+            Process.Start("https://www.xe.com/currencyconverter/convert/?Amount=" + DenominationComboBox.Text & "&From=" + Currency_NameComboBox.Text & "&To=" + My.Settings.ToCurrency)
+        Else
+            MsgBox("Network is not available please try again later", vbOKOnly + vbExclamation)
+        End If
+    End Sub
 
     Private Sub Button9_Click(sender As Object, e As EventArgs)
 
     End Sub
 
-
-
-    Private Sub Button11_Click(sender As Object, e As EventArgs) Handles Button11.Click
-        If My.Computer.Network.IsAvailable Then
-            System.Diagnostics.Process.Start("http://banknote.ws")
+    Private Sub Button10_Click(sender As Object, e As EventArgs) Handles Button10.Click
+        If My.Settings.ScannerDrive = Nothing Then
+            MsgBox("There is no driver file selected so please select it from settings option", +vbOKOnly + vbExclamation)
         Else
-            MessageBox.Show("Network is not available. Please try again later.", "Network Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            System.Diagnostics.Process.Start("" + My.Settings.ScannerDrive)
         End If
     End Sub
 
+    Private Sub Button11_Click(sender As Object, e As EventArgs) Handles Button11.Click
+        If My.Computer.Network.IsAvailable Then
+            Process.Start("http://banknote.ws")
+        Else
+            MsgBox("Network is not available please try again later", vbOKOnly + vbExclamation)
+        End If
+    End Sub
 
     Private Sub GroupBox4_Enter(sender As Object, e As EventArgs) Handles GroupBox4.Enter
 
     End Sub
 
+    Private Sub filterPerfect()
+        Dim cantfind As String = cmbtxtSearch.Text
+
+        Try
+
+            If cmbCategory.SelectedIndex = 0 Then
+
+                TableBindingSource.Filter = "Continent Like'" & Me.cmbtxtSearch.Text & "'"
+
+            ElseIf cmbCategory.SelectedIndex = 1 Then
+
+                TableBindingSource.Filter = "Country Like'" & Me.cmbtxtSearch.Text & "'"
+
+            ElseIf cmbCategory.SelectedIndex = 2 Then
+
+                TableBindingSource.Filter = "Catalogue_Code Like'" & Me.cmbtxtSearch.Text & "'"
+
+            ElseIf cmbCategory.SelectedIndex = 3 Then
+                Dim text As String
+
+                text = UCase(cmbtxtSearch.Text)
+
+                TableBindingSource.Filter = "Currency_Name Like'" & text & "'"
+
+            ElseIf cmbCategory.SelectedIndex = 4 Then
+
+                TableBindingSource.Filter = "Denomination Like'" & Me.cmbtxtSearch.Text & "'"
+
+            ElseIf cmbCategory.SelectedIndex = 5 Then
+
+                TableBindingSource.Filter = "Date_Recorded_On Like'" & Me.cmbtxtSearch.Text & "'"
+
+            ElseIf cmbCategory.SelectedIndex = 6 Then
+
+                TableBindingSource.Filter = "Serial_No Like'" & Me.cmbtxtSearch.Text & "'"
+
+            ElseIf cmbCategory.SelectedIndex = 7 Then
+
+                TableBindingSource.Filter = "Condition Like'" & Me.cmbtxtSearch.Text & "'"
 
 
+            ElseIf cmbCategory.SelectedIndex = 8 Then
+
+                TableBindingSource.Filter = "Source Like'" & Me.cmbtxtSearch.Text & "'"
+
+            Else
+            End If
+
+        Catch ex As Exception
+
+        End Try
+    End Sub
+
+    Private Sub cmbtxtSearch_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbtxtSearch.SelectedIndexChanged
+        filterPerfect()
+    End Sub
+
+    Private Sub cmbtxtSearch_TextChanged(sender As Object, e As EventArgs) Handles cmbtxtSearch.TextChanged
+        filter()
+    End Sub
 
     Private Sub cmbCategory_DropDown(sender As Object, e As EventArgs) Handles cmbCategory.DropDown
 
@@ -908,8 +608,30 @@ Public Class frmNotes
 
     End Sub
 
-
-
+    Private Sub CheckEnteries()
+        If ContinentComboBox.Text = Nothing Or CountryComboBox.Text = Nothing Or Currency_NameComboBox.Text = Nothing Or DenominationComboBox.Text = Nothing Or Date_Recorded_OnTextBox.Text = Nothing Then
+            TableBindingNavigatorSaveItem.Enabled = False
+        Else
+            TableBindingNavigatorSaveItem.Enabled = True
+        End If
+    End Sub
+    Public Sub RefreshDatabase()
+        Frontal_ImagePictureBox.Image = Nothing
+        Backward_ImagePictureBox.Image = Nothing
+        Me.TableTableAdapter.Fill(Me.NotesDataSet.Table)
+    End Sub
+    Private Sub Button12_Click(sender As Object, e As EventArgs) Handles Button12.Click
+        Try
+            Frontal_ImagePictureBox.Image = Nothing
+            Backward_ImagePictureBox.Image = Nothing
+            Me.TableTableAdapter.Fill(Me.NotesDataSet.Table)
+        Catch ex As Exception
+            MsgBox("Unable to load the database, please try to restore or reset the database from the Backup and Restore window. The program will redirect you to the Backup and Restore form", vbOKOnly + vbCritical)
+            frmBackupRestore.Show()
+            frmBackupRestore.TabControl.SelectTab(1)
+            Me.Hide()
+        End Try
+    End Sub
 
 
     Private Sub GroupBox2_Enter(sender As Object, e As EventArgs) Handles GroupBox2.Enter
@@ -924,76 +646,115 @@ Public Class frmNotes
 
     Dim FileNamePrimary As String
     Private Sub frmNotes_DragDrop(sender As Object, e As DragEventArgs) Handles MyBase.DragDrop
-        Dim droppedFiles As String() = CType(e.Data.GetData(DataFormats.FileDrop), String())
+        Dim droppedfile As String() = e.Data.GetData(DataFormats.FileDrop)
 
-        If Frontal_ImagePictureBox.Image IsNot Nothing AndAlso Backward_ImagePictureBox.Image IsNot Nothing Then
-            MessageBox.Show("Both picture boxes are filled. Please clear one before dropping a new image.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        If Frontal_ImagePictureBox.Image IsNot Nothing And Backward_ImagePictureBox.Image IsNot Nothing Then
+            MsgBox("Both the picture boxes are filled first clear them", vbOKOnly + vbInformation)
+        Else
+            For Each file In droppedfile
+                Dim filename As String = getfilename(file)
+                FileNamePrimary = filename
+
+                If file.EndsWith(".png", StringComparison.CurrentCultureIgnoreCase) Or file.EndsWith(".bmp", StringComparison.CurrentCultureIgnoreCase) Or file.EndsWith(".jpg", StringComparison.CurrentCultureIgnoreCase) Or file.EndsWith(".jpeg", StringComparison.CurrentCultureIgnoreCase) Then
+                    If Frontal_ImagePictureBox.Image IsNot Nothing Then
+                        BackDrag()
+                    ElseIf Frontal_ImagePictureBox.Image Is Nothing Then
+                        FrontDrag()
+                    End If
+                Else
+                    MsgBox("The file format which you have chosen is not supported for this function. Please choose an image file of format (.jpeg or .png or .bmp or .jpg)", vbOKOnly + vbCritical)
+                End If
+            Next
+
+        End If
+    End Sub
+    Private Sub FrontDrag()
+        Dim FileToCopy_F As String
+        Dim NewCopy_F As String
+        Dim FileName_F As String
+        Dim FileExtention_F As String
+        Dim Memory As Integer = 0
+
+
+        If FileNamePrimary.ToString IsNot Nothing Then
+
+            FileToCopy_F = FileNamePrimary
+            FileName_F = Path.GetFileName(FileNamePrimary)
+            FileExtention_F = Path.GetExtension(FileNamePrimary)
+
+            NewCopy_F = Application.StartupPath & "\" & folder & "\0_F" & FileExtention_F
+
+            If File.Exists(NewCopy_F) Then
+                Memory = 0
+
+                Do While File.Exists(Application.StartupPath & "\" & folder & "\" & Memory & "_F" & FileExtention_F)
+                    Memory = Memory + 1
+
+                Loop
+
+                NewCopy_F = Application.StartupPath & "\" & folder & "\" & Memory & "_F" & FileExtention_F
+
+                System.IO.File.Copy(FileToCopy_F, NewCopy_F)
+            Else
+                Memory = 0
+
+                NewCopy_F = Application.StartupPath & "\" & folder & "\" & Memory & "_F" & FileExtention_F
+
+                Memory = 0
+
+                System.IO.File.Copy(FileToCopy_F, NewCopy_F)
+            End If
+
+            Frontal_ImageTextBox.Text = System.IO.Path.GetFileName(NewCopy_F)
+            Frontal_ImagePictureBox.Image = Image.FromFile(NewCopy_F)
+        Else
             Return
         End If
-
-        For Each file In droppedFiles
-            FileNamePrimary = GetFileNameFromPath(file) ' Use a more descriptive helper function
-            Dim fileExtension As String = Path.GetExtension(FileNamePrimary).ToLower()
-
-            If fileExtension = ".png" OrElse fileExtension = ".bmp" OrElse fileExtension = ".jpg" OrElse fileExtension = ".jpeg" Then
-                If Frontal_ImagePictureBox.Image IsNot Nothing Then
-                    BackDrag()
-                ElseIf Frontal_ImagePictureBox.Image Is Nothing Then
-                    FrontDrag()
-                End If
-            Else
-                MessageBox.Show("The file format you have chosen is not supported for this function. Please choose an image file of format (.jpeg or .png or .bmp or .jpg)", "Unsupported Format", MessageBoxButtons.OK, MessageBoxIcon.Exclamation )
-            End If
-        Next
-    End Sub
-
-    Private Function GetFileNameFromPath(fullPath As String) As String
-        Return System.IO.Path.GetFullPath(fullPath)
-    End Function
-
-    Private Sub FrontDrag()
-        Try
-            If Not String.IsNullOrWhiteSpace(FileNamePrimary) Then
-                Dim fileExtention_F As String = Path.GetExtension(FileNamePrimary)
-                Dim memory As Integer = 0
-
-                Do While File.Exists(Path.Combine(FullImagePath, $"{memory}_F{fileExtention_F}"))
-                    memory += 1
-                Loop
-                Dim newCopy_F As String = Path.Combine(FullImagePath, $"{memory}_F{fileExtention_F}")
-
-                System.IO.File.Copy(FileNamePrimary, newCopy_F)
-
-                Frontal_ImageTextBox.Text = Path.GetFileName(newCopy_F)
-                Frontal_ImagePictureBox.Image = Image.FromFile(newCopy_F)
-            End If
-        Catch ex As Exception
-            MessageBox.Show($"Error during frontal image drag-drop: {ex.Message}", "Drag-Drop Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Console.WriteLine($"FrontDrag Error: {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-        End Try
     End Sub
     Private Sub BackDrag()
-        Try
-            If Not String.IsNullOrWhiteSpace(FileNamePrimary) Then
-                Dim fileExtention_B As String = Path.GetExtension(FileNamePrimary)
-                Dim memory_B As Integer = 0
+        Dim FileToCopy_B As String
+        Dim NewCopy_B As String
+        Dim FileName_B As String
+        Dim FileExtention_B As String
+        Dim Memory_B As Integer = 0
 
-                Do While File.Exists(Path.Combine(FullImagePath, $"{memory_B}_B{fileExtention_B}"))
-                    memory_B += 1
+
+
+        If FileNamePrimary IsNot Nothing Then
+
+            FileToCopy_B = FileNamePrimary
+            FileName_B = Path.GetFileName(FileNamePrimary)
+            FileExtention_B = Path.GetExtension(FileNamePrimary)
+
+            NewCopy_B = Application.StartupPath & "\" & folder & "\0_B" & FileExtention_B
+
+            If File.Exists(NewCopy_B) Then
+                Memory_B = 0
+
+                Do While File.Exists(Application.StartupPath & "\" & folder & "\" & Memory_B & "_B" & FileExtention_B)
+                    Memory_B = Memory_B + 1
+
                 Loop
-                Dim newCopy_B As String = Path.Combine(FullImagePath, $"{memory_B}_B{fileExtention_B}")
 
-                System.IO.File.Copy(FileNamePrimary, newCopy_B)
+                NewCopy_B = Application.StartupPath & "\" & folder & "\" & Memory_B & "_B" & FileExtention_B
 
-                Backward_ImageTextBox.Text = Path.GetFileName(newCopy_B)
-                Backward_ImagePictureBox.Image = Image.FromFile(newCopy_B)
+                System.IO.File.Copy(FileToCopy_B, NewCopy_B)
+            Else
+                Memory_B = 0
+
+                NewCopy_B = Application.StartupPath & "\" & folder & "\" & Memory_B & "_B" & FileExtention_B
+
+                Memory_B = 0
+
+                System.IO.File.Copy(FileToCopy_B, NewCopy_B)
             End If
-        Catch ex As Exception
-            MessageBox.Show($"Error during backward image drag-drop: {ex.Message}", "Drag-Drop Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Console.WriteLine($"BackDrag Error: {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-        End Try
-    End Sub
 
+            Backward_ImageTextBox.Text = System.IO.Path.GetFileName(NewCopy_B)
+            Backward_ImagePictureBox.Image = Image.FromFile(NewCopy_B)
+        Else
+            Return
+        End If
+    End Sub
     Public Function getfilename(path As String)
         Return System.IO.Path.GetFullPath(path)
 
@@ -1028,6 +789,1736 @@ Public Class frmNotes
         CheckEnteries()
     End Sub
 
+    Private Sub Currency_NameComboBox_TextChanged(sender As Object, e As EventArgs) Handles Currency_NameComboBox.TextChanged
+        CheckEnteries()
+
+        Try
+            If Currency_NameComboBox.Text = "AUD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "GBP" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+            ElseIf Currency_NameComboBox.Text = "EUR" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+            ElseIf Currency_NameComboBox.Text = "JPY" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+            ElseIf Currency_NameComboBox.Text = "CHF" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "USD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+                DenominationComboBox.Items.Add("100,000")
+            ElseIf Currency_NameComboBox.Text = "AFN" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "ALL" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+            ElseIf Currency_NameComboBox.Text = "DZD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "AOA" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+
+            ElseIf Currency_NameComboBox.Text = "ARS" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "AMD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("20,000")
+                DenominationComboBox.Items.Add("50,000")
+            ElseIf Currency_NameComboBox.Text = "AWG" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+            ElseIf Currency_NameComboBox.Text = "AUD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "ATS" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("5,000")
+            ElseIf Currency_NameComboBox.Text = "BEF" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+            ElseIf Currency_NameComboBox.Text = "AZN" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "BSD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1/2")
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("3")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "BHD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+            ElseIf Currency_NameComboBox.Text = "BDT" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "BBD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "BYR" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+            ElseIf Currency_NameComboBox.Text = "BZD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "BMD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "BTN" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+            ElseIf Currency_NameComboBox.Text = "BOB" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+            ElseIf Currency_NameComboBox.Text = "BAM" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+            ElseIf Currency_NameComboBox.Text = "BWP" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+            ElseIf Currency_NameComboBox.Text = "BRL" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "GBP" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "BND" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("10,000")
+            ElseIf Currency_NameComboBox.Text = "BGN" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+            ElseIf Currency_NameComboBox.Text = "BIF" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("5,000")
+            ElseIf Currency_NameComboBox.Text = "XOF" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+            ElseIf Currency_NameComboBox.Text = "XAF" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+            ElseIf Currency_NameComboBox.Text = "XPF" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+            ElseIf Currency_NameComboBox.Text = "KHR" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+                DenominationComboBox.Items.Add("20,000")
+                DenominationComboBox.Items.Add("50,000")
+                DenominationComboBox.Items.Add("100,000")
+            ElseIf Currency_NameComboBox.Text = "CAD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "CVE" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("2,500")
+                DenominationComboBox.Items.Add("5,000")
+            ElseIf Currency_NameComboBox.Text = "KYD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("40")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "CLP" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+                DenominationComboBox.Items.Add("20,000")
+            ElseIf Currency_NameComboBox.Text = "CNY" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "COP" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+                DenominationComboBox.Items.Add("20,000")
+                DenominationComboBox.Items.Add("50,000")
+                DenominationComboBox.Items.Add("100,000")
+            ElseIf Currency_NameComboBox.Text = "KMF" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("2,500")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+            ElseIf Currency_NameComboBox.Text = "CDF" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+                DenominationComboBox.Items.Add("20,000")
+            ElseIf Currency_NameComboBox.Text = "CRC" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+                DenominationComboBox.Items.Add("20,000")
+                DenominationComboBox.Items.Add("50,000")
+            ElseIf Currency_NameComboBox.Text = "HRK" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "CUC" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("3")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "CUP" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("3")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "CYP" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+            ElseIf Currency_NameComboBox.Text = "CZK" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+            ElseIf Currency_NameComboBox.Text = "DKK" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "DJF" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+            ElseIf Currency_NameComboBox.Text = "DOP" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+            ElseIf Currency_NameComboBox.Text = "XCD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "EGP" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+            ElseIf Currency_NameComboBox.Text = "SVC" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "EEK" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+            ElseIf Currency_NameComboBox.Text = "ETB" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "EUR" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+            ElseIf Currency_NameComboBox.Text = "FKP" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+            ElseIf Currency_NameComboBox.Text = "FIM" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("5,000")
+            ElseIf Currency_NameComboBox.Text = "FJD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "GMD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+            ElseIf Currency_NameComboBox.Text = "GEL" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "DMK" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1/2")
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "GHS" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+            ElseIf Currency_NameComboBox.Text = "GIP" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "GRD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("5,000")
+            ElseIf Currency_NameComboBox.Text = "GTQ" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+            ElseIf Currency_NameComboBox.Text = "GNF" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+            ElseIf Currency_NameComboBox.Text = "GYD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "HTG" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("250")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "HNL" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+            ElseIf Currency_NameComboBox.Text = "HKD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "HUF" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+                DenominationComboBox.Items.Add("20,000")
+            ElseIf Currency_NameComboBox.Text = "ISK" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+            ElseIf Currency_NameComboBox.Text = "INR" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+            ElseIf Currency_NameComboBox.Text = "IDR" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+                DenominationComboBox.Items.Add("20,000")
+                DenominationComboBox.Items.Add("50,000")
+                DenominationComboBox.Items.Add("100,000")
+            ElseIf Currency_NameComboBox.Text = "IRR" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("100,000")
+            ElseIf Currency_NameComboBox.Text = "IQD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("250")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+                DenominationComboBox.Items.Add("25,000")
+            ElseIf Currency_NameComboBox.Text = "IED" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "ILS" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+            ElseIf Currency_NameComboBox.Text = "ITL" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "JMD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("5,000")
+            ElseIf Currency_NameComboBox.Text = "JPY" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+            ElseIf Currency_NameComboBox.Text = "JOD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+            ElseIf Currency_NameComboBox.Text = "KZT" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+                DenominationComboBox.Items.Add("20,000")
+            ElseIf Currency_NameComboBox.Text = "KES" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "KWD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1/4")
+                DenominationComboBox.Items.Add("1/2")
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+            ElseIf Currency_NameComboBox.Text = "KGS" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("5,000")
+            ElseIf Currency_NameComboBox.Text = "LAK" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+                DenominationComboBox.Items.Add("20,000")
+                DenominationComboBox.Items.Add("50,000")
+            ElseIf Currency_NameComboBox.Text = "LVL" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+            ElseIf Currency_NameComboBox.Text = "LBP" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+                DenominationComboBox.Items.Add("20,000")
+                DenominationComboBox.Items.Add("50,000")
+                DenominationComboBox.Items.Add("100,000")
+            ElseIf Currency_NameComboBox.Text = "LSL" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+            ElseIf Currency_NameComboBox.Text = "LRD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "LYD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1/4")
+                DenominationComboBox.Items.Add("1/2")
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+            ElseIf Currency_NameComboBox.Text = "LTL" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+            ElseIf Currency_NameComboBox.Text = "LUF" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("125")
+            ElseIf Currency_NameComboBox.Text = "MOP" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "MKD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "MGA" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+                DenominationComboBox.Items.Add("20,000")
+            ElseIf Currency_NameComboBox.Text = "MWK" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+            ElseIf Currency_NameComboBox.Text = "MYR" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "MVR" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+            ElseIf Currency_NameComboBox.Text = "MTL" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+            ElseIf Currency_NameComboBox.Text = "MRO" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "MUR" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("0.05")
+                DenominationComboBox.Items.Add("0.2")
+                DenominationComboBox.Items.Add("0.5")
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+            ElseIf Currency_NameComboBox.Text = "MXN" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+            ElseIf Currency_NameComboBox.Text = "MDL" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "MNT" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("3")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+            ElseIf Currency_NameComboBox.Text = "MAD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+            ElseIf Currency_NameComboBox.Text = "MZN" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "MMK" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+            ElseIf Currency_NameComboBox.Text = "ANG" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2 1/2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("250")
+                DenominationComboBox.Items.Add("500")
+            ElseIf Currency_NameComboBox.Text = "NAD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+            ElseIf Currency_NameComboBox.Text = "NPR" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "NLG" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "NZD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "NIO" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+            ElseIf Currency_NameComboBox.Text = "NGN" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "KPW" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+            ElseIf Currency_NameComboBox.Text = "NOK" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "OMR" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1/2")
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+            ElseIf Currency_NameComboBox.Text = "PKR" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("5,000")
+            ElseIf Currency_NameComboBox.Text = "PAB" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+            ElseIf Currency_NameComboBox.Text = "PGK" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+            ElseIf Currency_NameComboBox.Text = "PYG" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+                DenominationComboBox.Items.Add("20,000")
+                DenominationComboBox.Items.Add("50,000")
+                DenominationComboBox.Items.Add("100,000")
+            ElseIf Currency_NameComboBox.Text = "PEN" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+            ElseIf Currency_NameComboBox.Text = "PHP" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "PLN" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+
+            ElseIf Currency_NameComboBox.Text = "PTE" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+            ElseIf Currency_NameComboBox.Text = "QAR" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+            ElseIf Currency_NameComboBox.Text = "RON" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+            ElseIf Currency_NameComboBox.Text = "RUB" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("5,000")
+            ElseIf Currency_NameComboBox.Text = "RWF" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+            ElseIf Currency_NameComboBox.Text = "WST" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "STD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("250")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+                DenominationComboBox.Items.Add("20,000")
+                DenominationComboBox.Items.Add("50,000")
+                DenominationComboBox.Items.Add("100,000")
+            ElseIf Currency_NameComboBox.Text = "SAR" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+            ElseIf Currency_NameComboBox.Text = "RSD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+            ElseIf Currency_NameComboBox.Text = "SCR" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+            ElseIf Currency_NameComboBox.Text = "SLL" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+            ElseIf Currency_NameComboBox.Text = "SGD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("10,000")
+            ElseIf Currency_NameComboBox.Text = "SKK" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("5,000")
+            ElseIf Currency_NameComboBox.Text = "SIT" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+            ElseIf Currency_NameComboBox.Text = "SBD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("40")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "SOS" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "ZAR" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+            ElseIf Currency_NameComboBox.Text = "KRW" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+            ElseIf Currency_NameComboBox.Text = "ESP" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+            ElseIf Currency_NameComboBox.Text = "LKR" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+            ElseIf Currency_NameComboBox.Text = "SHP" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("40")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "SDG" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+            ElseIf Currency_NameComboBox.Text = "SRD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("25")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "SZL" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+            ElseIf Currency_NameComboBox.Text = "SEK" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+            ElseIf Currency_NameComboBox.Text = "CHF" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "SYP" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+            ElseIf Currency_NameComboBox.Text = "TWD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+            ElseIf Currency_NameComboBox.Text = "TZS" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+            ElseIf Currency_NameComboBox.Text = "THB" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "TOP" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+            ElseIf Currency_NameComboBox.Text = "TTD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "TND" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("30")
+                DenominationComboBox.Items.Add("50")
+            ElseIf Currency_NameComboBox.Text = "TRY" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+            ElseIf Currency_NameComboBox.Text = "TMM" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+            ElseIf Currency_NameComboBox.Text = "USD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+            ElseIf Currency_NameComboBox.Text = "UGX" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+                DenominationComboBox.Items.Add("20,000")
+                DenominationComboBox.Items.Add("50,000")
+            ElseIf Currency_NameComboBox.Text = "UAH" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("2")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "UYU" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+            ElseIf Currency_NameComboBox.Text = "AED" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("20")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "VUV" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+            ElseIf Currency_NameComboBox.Text = "VEB" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+                DenominationComboBox.Items.Add("20,000")
+                DenominationComboBox.Items.Add("50,000")
+            ElseIf Currency_NameComboBox.Text = "VND" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("2,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+                DenominationComboBox.Items.Add("20,000")
+                DenominationComboBox.Items.Add("50,000")
+                DenominationComboBox.Items.Add("200,000")
+                DenominationComboBox.Items.Add("500,000")
+            ElseIf Currency_NameComboBox.Text = "YER" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("200")
+                DenominationComboBox.Items.Add("250")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+            ElseIf Currency_NameComboBox.Text = "ZMK" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("5,000")
+                DenominationComboBox.Items.Add("10,000")
+                DenominationComboBox.Items.Add("20,000")
+                DenominationComboBox.Items.Add("50,000")
+            ElseIf Currency_NameComboBox.Text = "ZWD" Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+                DenominationComboBox.Items.Add("1")
+                DenominationComboBox.Items.Add("5")
+                DenominationComboBox.Items.Add("10")
+                DenominationComboBox.Items.Add("50")
+                DenominationComboBox.Items.Add("100")
+                DenominationComboBox.Items.Add("500")
+                DenominationComboBox.Items.Add("1,000")
+                DenominationComboBox.Items.Add("1,000,000,000,000")
+            ElseIf Currency_NameComboBox.Text = Nothing Then
+                DenominationComboBox.Text = Nothing
+                DenominationComboBox.Items.Clear()
+            End If
+        Catch ex As Exception
+            DenominationComboBox.Text = Nothing
+            DenominationComboBox.Items.Clear()
+        End Try
+    End Sub
 
     Private Sub DenominationComboBox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles DenominationComboBox.SelectedIndexChanged
         CheckEnteries()
@@ -1069,7 +2560,41 @@ Public Class frmNotes
         ConditionComboBox.Text = ConditionComboBox.Text.ToUpper
     End Sub
 
+    Private Sub BindingNavigatorDeleteItem_Click(sender As Object, e As EventArgs) Handles BindingNavigatorDeleteItem.Click
+        If Val(IDTextBox.Text) < 0 Then
+            MsgBox("The record which you are trying to delete is not saved, first save it to continue the action", vbOKOnly + vbCritical)
 
+        Else
+            Dim cn As New OleDbConnection("Provider=microsoft.ACE.OLEDB.12.0;Data Source=" & Application.StartupPath & "\Notes.accdb")
+            Dim cmd As OleDbCommand
+            Dim da As OleDbDataAdapter
+            Dim dt As DataTable
+
+            cmd = New OleDbCommand("DELETE FROM [Table] WHERE ID=" & Val(IDTextBox.Text) & ";", cn)
+            cn.Open()
+            cmd.ExecuteNonQuery()
+            cn.Close()
+
+            Me.Validate()
+            Me.TableBindingSource.EndEdit()
+
+            NotesDataSet.AcceptChanges()
+
+            Me.TableAdapterManager.UpdateAll(Me.NotesDataSet)
+            Me.TableTableAdapter.Update(NotesDataSet.Table)
+            MsgBox("The record has been deleted ", vbOKOnly + vbExclamation)
+
+            RefreshDatabase()
+        End If
+        ActiveControl = ContinentComboBox
+
+    End Sub
+
+    Private Sub frmNotes_KeyDown(sender As Object, e As KeyEventArgs) Handles MyBase.KeyDown
+        If e.KeyCode = Keys.Control + Keys.S Then
+            MsgBox("ok")
+        End If
+    End Sub
 
     Private Sub Serial_NoTextBox_Leave(sender As Object, e As EventArgs) Handles Serial_NoTextBox.Leave
         Serial_NoTextBox.Text = Serial_NoTextBox.Text.ToUpper
@@ -1083,7 +2608,24 @@ Public Class frmNotes
         Button12.Image = My.Resources.Refresh1
     End Sub
 
-    Private Sub GroupBox1_Enter(sender As Object, e As EventArgs) Handles GroupBox1.Enter
+    Private Sub TableDataGridView_CellEnter(sender As Object, e As DataGridViewCellEventArgs) Handles TableDataGridView.CellEnter
+        Frontal_ImagePictureBox.Image = Nothing
+        Backward_ImagePictureBox.Image = Nothing
 
+        If Frontal_ImageTextBox.Text = Nothing Then
+        Else
+            Dim a As String
+            a = Frontal_ImageTextBox.Text
+            Frontal_ImagePictureBox.ImageLocation = Application.StartupPath & "\" & folder & "\" & a
+            a = Nothing
+        End If
+
+        If Backward_ImageTextBox.Text = Nothing Then
+        Else
+            Dim b As String
+            b = Backward_ImageTextBox.Text
+            Backward_ImagePictureBox.ImageLocation = Application.StartupPath & "\" & folder & "\" & b
+            b = Nothing
+        End If
     End Sub
 End Class

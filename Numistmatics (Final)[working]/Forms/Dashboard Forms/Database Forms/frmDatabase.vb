@@ -1,21 +1,11 @@
 ﻿Imports System.IO
 Imports System.Data.OleDb
-Imports System.Windows.Forms
 
 Public Class frmDatabase
     Dim folder As String = ("Resources\Images")
     Dim conn As New OleDbConnection("Provider=microsoft.ACE.OLEDB.12.0;Data Source=" & Application.StartupPath & "\Currency_Short_Names.accdb")
     Dim conn1 As New OleDbConnection("Provider=microsoft.ACE.OLEDB.12.0;Data Source=" & Application.StartupPath & "\Coins.accdb")
     Dim conn2 As New OleDbConnection("Provider=microsoft.ACE.OLEDB.12.0;Data Source=" & Application.StartupPath & "\Notes.accdb")
-
-
-    ' Use constants for folder names and combine paths robustly
-    Private Const ResourcesFolder As String = "Resources"
-    Private Const ImagesFolder As String = "Images"
-    Private ReadOnly FullImagePath As String = Path.Combine(Application.StartupPath, ResourcesFolder, ImagesFolder)
-
-
-
 
     Private Sub TableBindingNavigatorSaveItem_Click(sender As Object, e As EventArgs)
         Me.Validate()
@@ -25,147 +15,21 @@ Public Class frmDatabase
     End Sub
 
     Private Sub frmDatabase_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        ' Initialize DataSets and TableAdapters if not done by designer
-        ' Example (repeat for all DataSets/TableAdapters/BindingSources):
-        If Me.CoinsDataSet Is Nothing Then Me.CoinsDataSet = New CoinsDataSet()
-        If Me.TableTableAdapter Is Nothing Then Me.TableTableAdapter = New CoinsDataSetTableAdapters.TableTableAdapter()
-        If Me.TableBindingSource Is Nothing Then Me.TableBindingSource = New BindingSource()
-        Me.TableBindingSource.DataSource = Me.CoinsDataSet
-        Me.TableBindingSource.DataMember = "Table"
-        Me.TableDataGridView.DataSource = Me.TableBindingSource ' Ensure DataGridView is bound
-
-        ' Repeat for NotesDataSet/TableBindingSource1/TableDataGridView1
-        ' Repeat for Currency_Short_NamesDataSet/TableBindingSource2/TableDataGridView2
-
         Try
-            RefreshAllDatabases() ' Call the centralized refresh method
-        Catch ex As Exception
-            MessageBox.Show($"A critical error occurred during database loading: {ex.Message}{Environment.NewLine}The application may not function correctly. Please check database files and configurations.", "Critical Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Console.WriteLine($"Critical Load Error: {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-            ' Consider more robust error recovery or exit strategy here
-            If MessageBox.Show("Do you want to go to Backup and Restore?", "Recovery Option", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
-                frmBackupRestore.Show()
-                ' Assuming tabRestore is a TabPage or similar control on frmBackupRestore
-                ' frmBackupRestore.tabRestore.Show() ' Or frmBackupRestore.TabControl.SelectTab(1)
-                Me.Hide()
-            Else
-                System.Windows.Forms.Application.Exit() ' Exit if user doesn't want to recover
-            End If
-        End Try
-
-        ActiveControls() ' Set initial active control based on tab
-
-        ' Ensure image folder exists and is hidden
-        If Not Directory.Exists(FullImagePath) Then
-            Directory.CreateDirectory(FullImagePath)
-        End If
-        ' Set attributes for parent folders if they exist
-        If Directory.Exists(Path.Combine(Application.StartupPath, ResourcesFolder)) Then
-            File.SetAttributes(Path.Combine(Application.StartupPath, ResourcesFolder), FileAttributes.Hidden)
-        End If
-        If Directory.Exists(FullImagePath) Then
-            File.SetAttributes(FullImagePath, FileAttributes.Hidden)
-        End If
-
-    End Sub
-
-    ' Centralized method to refresh all database data
-    Public Sub RefreshAllDatabases()
-        Try
+            'TODO: This line of code loads data into the 'Currency_Short_NamesDataSet.Table' table. You can move, or remove it, as needed.
             Me.TableTableAdapter2.Fill(Me.Currency_Short_NamesDataSet.Table)
-        Catch ex As OleDbException
-            MessageBox.Show($"Database error loading Currency Short Names: {ex.Message}", "Database Load Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
-            Console.WriteLine($"OleDbException (Currency Names Refresh): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-        Catch ex As Exception
-            MessageBox.Show($"An unexpected error occurred loading Currency Short Names: {ex.Message}", "Load Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Console.WriteLine($"Exception (Currency Names Refresh): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-        End Try
-
-        Try
+            'TODO: This line of code loads data into the 'NotesDataSet.Table' table. You can move, or remove it, as needed.
             Me.TableTableAdapter1.Fill(Me.NotesDataSet.Table)
-        Catch ex As OleDbException
-            MessageBox.Show($"Database error loading Notes data: {ex.Message}", "Database Load Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
-            Console.WriteLine($"OleDbException (Notes Refresh): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-        Catch ex As Exception
-            MessageBox.Show($"An unexpected error occurred loading Notes data: {ex.Message}", "Load Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Console.WriteLine($"Exception (Notes Refresh): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-        End Try
-
-        Try
+            'TODO: This line of code loads data into the 'CoinsDataSet.Table' table. You can move, or remove it, as needed.
             Me.TableTableAdapter.Fill(Me.CoinsDataSet.Table)
-        Catch ex As OleDbException
-            MessageBox.Show($"Database error loading Coins data: {ex.Message}", "Database Load Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
-            Console.WriteLine($"OleDbException (Coins Refresh): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
         Catch ex As Exception
-            MessageBox.Show($"An unexpected error occurred loading Coins data: {ex.Message}", "Load Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Console.WriteLine($"Exception (Coins Refresh): {ex.Message}{Environment.NewLine}{ex.StackTrace}")
+            MsgBox("Unable to load the database, please try to restore or reset the database from the Backup and Restore window. The program will redirect you to the Backup and Restore form", vbOKOnly + vbCritical)
+            frmBackupRestore.Show()
+            frmBackupRestore.tabRestore.Show()
+            Me.Hide()
         End Try
-    End Sub
 
-    ' Helper function to apply filter to a DataGridView
-    Private Sub ApplyFilter(ByVal categoryComboBox As ComboBox, ByVal searchTextBox As ComboBox, ByVal bindingSource As BindingSource, ByVal dataGridView As DataGridView, ByVal isPerfectMatch As Boolean)
-        Dim filterColumn As String = ""
-        Dim filterValue As String = searchTextBox.Text.Replace("'", "''") ' Escape single quotes
-
-        ' Determine the column to filter based on categoryComboBox.SelectedIndex
-        Select Case categoryComboBox.Name ' Use name to differentiate between cmbCategory, ComboBox2, ComboBox4
-            Case "cmbCategory" ' For TableDataGridView2 (Currency_Short_Names)
-                Select Case categoryComboBox.SelectedIndex
-                    Case 0 : filterColumn = "Country_Currency"
-                    Case 1 : filterColumn = "Full_Name"
-                    Case 2 : filterColumn = "Local_Names"
-                    Case 3 : filterColumn = "Abbriviated_Names"
-                    Case Else : bindingSource.Filter = Nothing : Return
-                End Select
-            Case "ComboBox2" ' For TableDataGridView (Coins)
-                Select Case categoryComboBox.SelectedIndex
-                    Case 0 : filterColumn = "Continent"
-                    Case 1 : filterColumn = "Country"
-                    Case 2 : filterColumn = "Catalogue_Code"
-                    Case 3 : filterColumn = "Currency_Name"
-                        filterValue = filterValue.ToUpper()
-                    Case 4 : filterColumn = "Denomination"
-                    Case 5 : filterColumn = "Date_Recorded_On"
-                    Case 6 : filterColumn = "Source"
-                    Case Else : bindingSource.Filter = Nothing : Return
-                End Select
-            Case "ComboBox4" ' For TableDataGridView1 (Notes)
-                Select Case categoryComboBox.SelectedIndex
-                    Case 0 : filterColumn = "Continent"
-                    Case 1 : filterColumn = "Country"
-                    Case 2 : filterColumn = "Catalogue_Code"
-                    Case 3 : filterColumn = "Currency_Name"
-                        filterValue = filterValue.ToUpper()
-                    Case 4 : filterColumn = "Denomination"
-                    Case 5 : filterColumn = "Date_Recorded_On"
-                    Case 6 : filterColumn = "Serial_No"
-                    Case 7 : filterColumn = "Condition"
-                    Case 8 : filterColumn = "Source"
-                    Case Else : bindingSource.Filter = Nothing : Return
-                End Select
-            Case Else : bindingSource.Filter = Nothing : Return
-        End Select
-
-        Try
-            Dim filterString As String
-            If isPerfectMatch Then
-                If filterColumn = "Date_Recorded_On" Then
-                    filterString = $"FORMAT({filterColumn}, 'dd/mm/yyyy') = '{filterValue}'"
-                Else
-                    filterString = $"{filterColumn} = '{filterValue}'"
-                End If
-            Else
-                If filterColumn = "Date_Recorded_On" Then
-                    filterString = $"FORMAT({filterColumn}, 'dd/mm/yyyy') LIKE '%{filterValue}%'"
-                Else
-                    filterString = $"{filterColumn} LIKE '%{filterValue}%'"
-                End If
-            End If
-            bindingSource.Filter = filterString
-        Catch ex As Exception
-            MessageBox.Show($"Error applying filter: {ex.Message}", "Filter Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Console.WriteLine($"Filter Error: {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-        End Try
+        ActiveControls()
     End Sub
 
     Private Sub ActiveControls()
@@ -191,8 +55,7 @@ Public Class frmDatabase
         If frmLogin.Visible = True Or frmNotes.Visible = True Or frmCoins.Visible = True Or frmAboutMe.Visible = True Or frmBackupRestore.Visible = True Or frmSetting.Visible = True Or frmDashboard.Visible = True Or frmGallery.Visible = True Or frmInfoCenter.Visible = True Or frmChangeKey.Visible = True Then
             Me.Close()
         Else
-            frmDashboard.Show()
-            Me.Close()
+            System.Windows.Forms.Application.Exit()
         End If
     End Sub
 
@@ -372,13 +235,14 @@ Public Class frmDatabase
     End Sub
 
     Private Sub cmbtxtSearch_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbtxtSearch.SelectedIndexChanged
-        ApplyFilter(cmbCategory, cmbtxtSearch, TableBindingSource2, TableDataGridView2, True)
+        filterPerfect()
     End Sub
 
-    ' Example usage in your existing handlers:
     Private Sub cmbtxtSearch_TextChanged(sender As Object, e As EventArgs) Handles cmbtxtSearch.TextChanged
-        If cmbCategory.Text Is Nothing Then cmbCategory.SelectedIndex = 0 ' Ensure a category is selected
-        ApplyFilter(cmbCategory, cmbtxtSearch, TableBindingSource2, TableDataGridView2, False)
+        If cmbCategory.Text = Nothing Then
+            cmbCategory.SelectedIndex = 0
+        End If
+        filter()
     End Sub
 
     Private Sub butReset_Click(sender As Object, e As EventArgs) Handles butReset.Click
@@ -966,79 +830,68 @@ Public Class frmDatabase
 
 
     Private Sub TableDataGridView1_CellEnter(sender As Object, e As DataGridViewCellEventArgs) Handles TableDataGridView1.CellEnter
-        If e.RowIndex < 0 OrElse e.ColumnIndex < 0 Then Return ' Exit if invalid cell
+        If cmbPresentorDecision.SelectedIndex = 1 Or cmbPresentorDecision.Text = Nothing Then
 
-        Dim row As DataGridViewRow = TableDataGridView1.Rows(e.RowIndex)
+            If e.ColumnIndex >= 0 And e.ColumnIndex <= 12 Then
+                Dim row As DataGridViewRow = TableDataGridView1.Rows(e.RowIndex)
 
+                Front = row.Cells(11).Value.ToString
+                Back = row.Cells(12).Value.ToString
 
+                TextBox1.Text = Front
+                TextBox2.Text = Back
 
-        ' Always clear images first
-        Frontal_ImagePictureBox.Image = Nothing
-        Backward_ImagePictureBox.Image = Nothing
-        frmENotes.Frontal_Image.Image = Nothing
-        frmENotes.Backward_Image.Image = Nothing
+                ImageOpener()
+            End If
 
-        Try
-            ' Populate labels on frmENotes (using column names is better than indices if possible)
-            ' Assuming your DataGridView columns map to these properties
-            frmENotes.Label2.Text = row.Cells("Continent").Value?.ToString()
-            frmENotes.Label3.Text = row.Cells("Country").Value?.ToString()
-            frmENotes.Label4.Text = row.Cells("Catalogue_Code").Value?.ToString()
-            frmENotes.Label5.Text = row.Cells("Currency_Name").Value?.ToString()
-            frmENotes.Label6.Text = row.Cells("Denomination").Value?.ToString()
-            frmENotes.Label7.Text = row.Cells("Date_Recorded_On").Value?.ToString()
-            frmENotes.Label8.Text = row.Cells("Serial_No").Value?.ToString()
-            frmENotes.Label9.Text = row.Cells("Condition").Value?.ToString()
-            frmENotes.Label10.Text = row.Cells("Source").Value?.ToString()
-            ' Assuming Label11 is for CommentRichTextBox
-            frmENotes.Label11.Text = row.Cells("Comment").Value?.ToString()
+        ElseIf cmbPresentorDecision.SelectedIndex = 0 Then
+            If e.ColumnIndex >= 0 And e.ColumnIndex <= 12 Then
+                Dim row As DataGridViewRow = TableDataGridView1.Rows(e.RowIndex)
 
+                frmENotes.Label2.Text = row.Cells(1).Value.ToString
+                frmENotes.Label3.Text = row.Cells(2).Value.ToString
+                frmENotes.Label4.Text = row.Cells(3).Value.ToString
+                frmENotes.Label5.Text = row.Cells(4).Value.ToString
+                frmENotes.Label6.Text = row.Cells(5).Value.ToString
+                frmENotes.Label7.Text = row.Cells(6).Value.ToString
+                frmENotes.Label8.Text = row.Cells(7).Value.ToString
+                frmENotes.Label9.Text = row.Cells(8).Value.ToString
+                frmENotes.Label10.Text = row.Cells(9).Value.ToString
+                frmENotes.Label11.Text = row.Cells(10).Value.ToString
 
-            ' Image handling for frmDatabase's own PictureBoxes (if any, not clear from snippet)
-            Front = row.Cells(11).Value?.ToString() ' Assuming column 11 is Frontal_ImageFileName
-            Back = row.Cells(12).Value?.ToString()  ' Assuming column 12 is Backward_ImageFileName
-            TextBox1.Text = Front
-            TextBox2.Text = Back
-            ImageOpener() ' Call your existing image opener for this form
+                Try
 
-            ' Image handling for frmENotes
-            Dim frontalImageFileName As String = row.Cells(11).Value?.ToString()
-            If Not String.IsNullOrWhiteSpace(frontalImageFileName) Then
-                Dim fullPath As String = Path.Combine(FullImagePath, frontalImageFileName)
-                If File.Exists(fullPath) Then
-                    frmENotes.Frontal_Image.Image = Image.FromFile(fullPath)
-                Else
+                    If row.Cells(11).Value.ToString IsNot Nothing Then
+                        frmENotes.Frontal_Image.Image = Image.FromFile(Application.StartupPath & "\" & folder & "\" & row.Cells(11).Value.ToString)
+                    Else
+                        frmENotes.Frontal_Image.Image = My.Resources.None_Image
+                    End If
+
+                Catch ex As Exception
                     frmENotes.Frontal_Image.Image = My.Resources.None_Image
-                    Console.WriteLine($"Warning: Frontal image file not found for Notes: {fullPath}")
-                End If
-            Else
-                frmENotes.Frontal_Image.Image = My.Resources.None_Image
-            End If
+                End Try
 
-            Dim backwardImageFileName As String = row.Cells(12).Value?.ToString()
-            If Not String.IsNullOrWhiteSpace(backwardImageFileName) Then
-                Dim fullPath As String = Path.Combine(FullImagePath, backwardImageFileName)
-                If File.Exists(fullPath) Then
-                    frmENotes.Backward_Image.Image = Image.FromFile(fullPath)
-                Else
-                    frmENotes.Backward_Image.Image = My.Resources.None_Image
-                    Console.WriteLine($"Warning: Backward image file not found for Notes: {fullPath}")
-                End If
-            Else
-                frmENotes.Backward_Image.Image = My.Resources.None_Image
-            End If
+                Try
 
-            ' Logic for secondary screen presentation (as per your original code)
-            If cmbPresentorDecision.SelectedIndex = 0 Then ' If presenter mode is active
-                If Not frmENotes.Visible Then frmENotes.Show() ' Show if not already visible
-            End If
+                    If row.Cells(12).Value.ToString IsNot Nothing Then
+                        frmENotes.Backward_Image.Image = Image.FromFile(Application.StartupPath & "\" & folder & "\" & row.Cells(12).Value.ToString)
+                    Else
+                        frmENotes.Backward_Image.Image = Nothing
+                    End If
 
-        Catch ex As Exception
-            MessageBox.Show($"Error loading Notes data for display: {ex.Message}", "Display Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Console.WriteLine($"Notes Display Error: {ex.Message}{Environment.NewLine}{ex.StackTrace}")
-            frmENotes.Frontal_Image.Image = My.Resources.None_Image
-            frmENotes.Backward_Image.Image = My.Resources.None_Image
-        End Try
+                Catch ex As Exception
+                    frmENotes.Backward_Image.Image = Nothing
+
+                End Try
+
+            End If
+        End If
+
     End Sub
 
+    Private Sub Button5_Click(sender As Object, e As EventArgs)
+        Me.TableTableAdapter.Fill(Me.CoinsDataSet.Table)
+        Me.TableTableAdapter1.Fill(Me.NotesDataSet.Table)
+        Me.TableTableAdapter2.Fill(Me.Currency_Short_NamesDataSet.Table)
+    End Sub
 End Class

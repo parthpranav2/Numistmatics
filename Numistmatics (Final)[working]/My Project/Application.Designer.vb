@@ -32,7 +32,7 @@ Namespace My
         
         <Global.System.Diagnostics.DebuggerStepThroughAttribute()>  _
         Protected Overrides Sub OnCreateMainForm()
-            Me.MainForm = Global.Numistmatics__Final__working_.frmLogin
+            Me.MainForm = Global.Numistmatics__Final__working_.frmCustomSplashScreen
         End Sub
     End Class
 End Namespace
